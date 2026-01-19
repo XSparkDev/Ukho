@@ -1,112 +1,426 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { Image, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+import { useTheme } from '@/constants/Theme';
+import { BorderRadius, Spacing, Typography } from '@/constants/Styles';
 
-export default function TabTwoScreen() {
+type Elder = {
+  id: string;
+  name: string;
+  role: string;
+  clan: string;
+  avatar: string;
+};
+
+type Kin = {
+  id: string;
+  name: string;
+  clan: string;
+  matchReason: string;
+  avatar: string;
+};
+
+const VERIFIED_ELDERS: Elder[] = [
+  {
+    id: 'c1',
+    name: 'Baba Mthimkhulu',
+    role: 'Chief Elder',
+    clan: 'Khumalo',
+    avatar:
+      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=150&h=150',
+  },
+  {
+    id: 'c2',
+    name: 'Gogo Dlamini',
+    role: 'Genealogist',
+    clan: 'Dlamini',
+    avatar:
+      'https://images.unsplash.com/photo-1567532939604-b6c5b0ad2e01?auto=format&fit=crop&q=80&w=150&h=150',
+  },
+  {
+    id: 'c3',
+    name: 'Nkosi Zwelithini',
+    role: 'Traditional Council',
+    clan: 'Zulu',
+    avatar:
+      'https://images.unsplash.com/photo-1507152832244-10d557b33b75?auto=format&fit=crop&q=80&w=150&h=150',
+  },
+  {
+    id: 'c4',
+    name: 'Mkhulu Gumede',
+    role: 'History Keeper',
+    clan: 'Gumede',
+    avatar:
+      'https://images.unsplash.com/photo-1523910088395-dce0fc364d70?auto=format&fit=crop&q=80&w=150&h=150',
+  },
+];
+
+const POTENTIAL_KIN: Kin[] = [
+  {
+    id: 'r1',
+    name: 'Lungile Khumalo',
+    clan: 'Khumalo',
+    matchReason: 'Direct Clan Match',
+    avatar:
+      'https://images.unsplash.com/photo-1531384441138-2736e62e0919?auto=format&fit=crop&q=80&w=150&h=150',
+  },
+  {
+    id: 'r2',
+    name: 'Sabelo Mabaso',
+    clan: 'Mabaso',
+    matchReason: 'Related Branch',
+    avatar:
+      'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&q=80&w=150&h=150',
+  },
+  {
+    id: 'r3',
+    name: 'Nomalanga Mntungwa',
+    clan: 'Mntungwa',
+    matchReason: 'Shared Praises',
+    avatar:
+      'https://images.unsplash.com/photo-1567532939604-b6c5b0ad2e01?auto=format&fit=crop&q=80&w=150&h=150',
+  },
+];
+
+export default function ContactsScreen() {
+  const { theme } = useTheme();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredElders = useMemo(
+    () =>
+      VERIFIED_ELDERS.filter(
+        (e) =>
+          e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          e.clan.toLowerCase().includes(searchQuery.toLowerCase()),
+      ),
+    [searchQuery],
+  );
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
-        </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <ThemedView style={[styles.screen, { backgroundColor: theme.bgColor }]}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header card */}
+        <View
+          style={[
+            styles.headerCard,
+            {
+              backgroundColor: theme.panelBg,
+              borderColor: theme.borderColor,
+            },
+          ]}
+        >
+          <View style={styles.headerTopRow}>
+            <View>
+              <ThemedText
+                style={[
+                  styles.headerTitle,
+                  { color: theme.textMain, fontFamily: Typography.spaceGrotesk },
+                ]}
+              >
+                YOUR CLAN NETWORK
+              </ThemedText>
+              <ThemedText style={styles.headerSubtitle}>CONNECTING THE BLOODLINES</ThemedText>
+            </View>
+          </View>
+          <View style={styles.searchRow}>
+            <Feather
+              name="search"
+              size={18}
+              color={theme.textDim}
+              style={styles.searchIcon}
+            />
+            <TextInput
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Search ancestors or kin..."
+              placeholderTextColor={theme.textDim}
+              style={[
+                styles.searchInput,
+                {
+                  color: theme.textMain,
+                  backgroundColor: 'rgba(0,0,0,0.05)',
+                  borderColor: 'rgba(0,0,0,0.05)',
+                },
+              ]}
+            />
+          </View>
+        </View>
+
+        {/* Verified Elders */}
+        <View style={styles.sectionHeader}>
+          <Feather name="shield" size={20} color="#10b981" />
+          <ThemedText style={[styles.sectionTitle, { color: theme.textMain }]}>
+            VERIFIED ELDERS
+          </ThemedText>
+        </View>
+
+        <View style={styles.eldersGrid}>
+          {filteredElders.map((elder) => (
+            <View
+              key={elder.id}
+              style={[
+                styles.elderCard,
+                {
+                  backgroundColor: theme.panelBg,
+                  borderColor: theme.borderColor,
+                },
+              ]}
+            >
+              <View style={styles.elderRow}>
+                <View style={styles.elderAvatarWrapper}>
+                  <Image source={{ uri: elder.avatar }} style={styles.elderAvatar} />
+                  <View style={styles.verifyDot}>
+                    <Feather name="shield" size={10} color="#fff" />
+                  </View>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <ThemedText style={[styles.elderName, { color: theme.textMain }]}>
+                    {elder.name}
+                  </ThemedText>
+                  <ThemedText style={styles.elderClan}>{elder.clan} Clan</ThemedText>
+                  <ThemedText style={styles.elderRole}>{elder.role}</ThemedText>
+                </View>
+                <View>
+                  <View style={styles.messageButton}>
+                    <Feather name="message-circle" size={18} color="#f97316" />
+                  </View>
+                </View>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {/* Potential Kin (compact grid) */}
+        {!searchQuery && (
+          <>
+            <View style={styles.sectionHeader}>
+              <Feather name="star" size={20} color="#f97316" />
+              <ThemedText style={[styles.sectionTitle, { color: theme.textMain }]}>
+                POTENTIAL KIN
+              </ThemedText>
+            </View>
+            <View
+              style={[
+                styles.potentialCard,
+                {
+                  backgroundColor: theme.panelBg,
+                  borderColor: theme.borderColor,
+                },
+              ]}
+            >
+              <View style={styles.kinGrid}>
+                {POTENTIAL_KIN.map((kin) => (
+                  <View key={kin.id} style={styles.kinCard}>
+                    <Image source={{ uri: kin.avatar }} style={styles.kinAvatar} />
+                    <ThemedText style={[styles.kinName, { color: theme.textMain }]}>
+                      {kin.name}
+                    </ThemedText>
+                    <ThemedText style={styles.kinClan}>{kin.clan}</ThemedText>
+                    <ThemedText style={styles.kinReason} numberOfLines={2}>
+                      “{kin.matchReason}”
+                    </ThemedText>
+                    <View style={styles.kinButton}>
+                      <Feather name="user-plus" size={14} color="#fff" />
+                      <ThemedText style={styles.kinButtonText}>SEND LINK</ThemedText>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </>
+        )}
+      </ScrollView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  screen: {
+    flex: 1,
   },
-  titleContainer: {
+  scrollContent: {
+    paddingHorizontal: Spacing[4],
+    paddingTop: Spacing[4],
+    paddingBottom: Spacing[8],
+    gap: Spacing[4],
+  },
+  headerCard: {
+    borderRadius: BorderRadius['2.5rem'],
+    padding: Spacing[5],
+    borderWidth: 1,
+    borderBottomWidth: 4,
+    borderBottomColor: '#f97316',
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+  },
+  headerTopRow: {
     flexDirection: 'row',
-    gap: 8,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing[4],
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '900',
+    fontStyle: 'italic',
+  },
+  headerSubtitle: {
+    marginTop: 4,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: Typography.letterSpacing.widest,
+    color: '#64748b',
+  },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  searchIcon: {
+    position: 'absolute',
+    left: 16,
+    zIndex: 1,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: Spacing[4],
+    paddingHorizontal: Spacing[4] + 20,
+    borderRadius: BorderRadius['2xl'],
+    borderWidth: 1,
+    fontSize: Typography.fontSize.base,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[2],
+    paddingHorizontal: Spacing[1],
+    marginTop: Spacing[4],
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: Typography.letterSpacing.widest,
+  },
+  eldersGrid: {
+    marginTop: Spacing[2],
+    gap: Spacing[3],
+  },
+  elderCard: {
+    borderRadius: BorderRadius['2rem'],
+    padding: Spacing[4],
+    borderWidth: 1,
+  },
+  elderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[4],
+  },
+  elderAvatarWrapper: {
+    position: 'relative',
+  },
+  elderAvatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+  },
+  verifyDot: {
+    position: 'absolute',
+    right: -4,
+    bottom: -4,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#10b981',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  elderName: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  elderClan: {
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: Typography.letterSpacing.widest,
+    color: '#f97316',
+    marginTop: 2,
+  },
+  elderRole: {
+    fontSize: 12,
+    color: '#64748b',
+    marginTop: 2,
+  },
+  messageButton: {
+    padding: Spacing[3],
+    borderRadius: BorderRadius.xl,
+    backgroundColor: 'rgba(249, 115, 22, 0.1)',
+  },
+  potentialCard: {
+    borderRadius: BorderRadius['2.5rem'],
+    padding: Spacing[5],
+    borderWidth: 1,
+    marginTop: Spacing[2],
+  },
+  kinGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing[3],
+    justifyContent: 'space-between',
+  },
+  kinCard: {
+    width: '48%',
+    borderRadius: BorderRadius['2xl'],
+    padding: Spacing[4],
+    backgroundColor: 'rgba(15,23,42,0.03)',
+    alignItems: 'center',
+    gap: Spacing[1],
+  },
+  kinAvatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    marginBottom: Spacing[2],
+  },
+  kinName: {
+    fontSize: 14,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  kinClan: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#f97316',
+    letterSpacing: Typography.letterSpacing.widest,
+  },
+  kinReason: {
+    fontSize: 11,
+    color: '#64748b',
+    fontStyle: 'italic',
+    textAlign: 'center',
+  },
+  kinButton: {
+    marginTop: Spacing[2],
+    borderRadius: BorderRadius.xl,
+    paddingVertical: Spacing[2],
+    paddingHorizontal: Spacing[3],
+    backgroundColor: '#f97316',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  kinButtonText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#fff',
+    letterSpacing: Typography.letterSpacing.widest,
   },
 });

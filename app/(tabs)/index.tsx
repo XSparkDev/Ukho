@@ -1,98 +1,266 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { useTheme } from '@/constants/Theme';
+import { UkhoGradient } from '@/constants/Colors';
+import { BorderRadius, Spacing, Typography } from '@/constants/Styles';
+import { getAncestralWisdom } from '@/services/geminiService';
 
-export default function HomeScreen() {
+export default function PlazaScreen() {
+  const { theme } = useTheme();
+  const [wisdom, setWisdom] = useState('Connecting to the roots...');
+
+  useEffect(() => {
+    (async () => {
+      const text = await getAncestralWisdom();
+      setWisdom(text || 'Umuntu ngumuntu ngabantu.');
+    })();
+  }, []);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <ThemedView style={[styles.screen, { backgroundColor: theme.bgColor }]}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Ukho Header Badge (mobile top bar analogue) */}
+        <View style={styles.headerRow}>
+          <LinearGradient
+            colors={[UkhoGradient.start, UkhoGradient.end]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.logoBadge}
+          >
+            <ThemedText style={styles.logoGlyph}>ü</ThemedText>
+          </LinearGradient>
+          <View>
+            <ThemedText
+              type="title"
+              style={[
+                styles.brandTitle,
+                { color: theme.textMain, fontFamily: Typography.spaceGrotesk },
+              ]}
+            >
+              Ukho
+            </ThemedText>
+            <ThemedText style={styles.brandTagline}>CONNECT YOUR ROOTS</ThemedText>
+          </View>
+        </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        {/* Ancestral Wisdom Card */}
+        <View
+          style={[
+            styles.glassCard,
+            styles.wisdomCard,
+            {
+              backgroundColor: theme.panelBg,
+              borderColor: theme.borderColor,
+            },
+          ]}
+        >
+          <View style={styles.wisdomTopBar} />
+          <View style={styles.wisdomHeaderRow}>
+            <Feather name="shield" size={18} color="#f97316" />
+            <ThemedText style={styles.wisdomLabel}>ANCESTRAL WISDOM</ThemedText>
+          </View>
+          <ThemedText style={[styles.wisdomText, { color: theme.textMain }]}>
+            “{wisdom}”
+          </ThemedText>
+        </View>
+
+        {/* Clan Search Card (simplified first pass) */}
+        <View
+          style={[
+            styles.glassCard,
+            {
+              backgroundColor: theme.panelBg,
+              borderColor: theme.borderColor,
+            },
+          ]}
+        >
+          <View style={styles.cardHeaderRow}>
+            <View style={styles.iconPill}>
+              <Feather name="search" size={22} color="#f97316" />
+            </View>
+            <View>
+              <ThemedText style={[styles.cardTitle, { color: theme.textMain }]}>
+                Clan Search
+              </ThemedText>
+              <ThemedText style={styles.cardSubtitle}>Find Your Origins</ThemedText>
+            </View>
+          </View>
+
+          <View style={styles.inputRow}>
+            <Feather
+              name="map-pin"
+              size={18}
+              color="rgba(249, 115, 22, 0.6)"
+              style={styles.inputIcon}
+            />
+            <ThemedText style={[styles.fakeInput, { color: theme.textDim }]}>
+              Enter surname or clan name...
+            </ThemedText>
+          </View>
+        </View>
+
+        {/* Izithakazelo teaser (placeholder for full praises card) */}
+        <View
+          style={[
+            styles.glassCard,
+            {
+              backgroundColor: theme.panelBg,
+              borderColor: theme.borderColor,
+            },
+          ]}
+        >
+          <View style={styles.cardHeaderRow}>
+            <View style={styles.iconPill}>
+              <Feather name="volume-2" size={22} color="#f97316" />
+            </View>
+            <View>
+              <ThemedText style={[styles.cardTitle, { color: theme.textMain }]}>
+                Izithakazelo
+              </ThemedText>
+              <ThemedText style={styles.cardSubtitle}>Recite Your Roots</ThemedText>
+            </View>
+          </View>
+          <ThemedText style={styles.bodyCopy}>
+            Soon you&apos;ll be able to pick your clan and have praises recited with Gemini TTS,
+            just like on the web Plaza.
+          </ThemedText>
+        </View>
+      </ScrollView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  screen: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: Spacing[4],
+    paddingTop: Spacing[4],
+    paddingBottom: Spacing[8],
+    gap: Spacing[4],
+  },
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing[3],
+    marginBottom: Spacing[2],
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  logoBadge: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
+  logoGlyph: {
+    fontSize: 26,
+    fontWeight: '900',
+    color: '#fff',
+    textTransform: 'lowercase',
+  },
+  brandTitle: {
+    fontSize: 20,
+    fontWeight: '900',
+    fontStyle: 'italic',
+  },
+  brandTagline: {
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: Typography.letterSpacing.widest,
+    color: '#f97316',
+  },
+  glassCard: {
+    borderRadius: BorderRadius['2.5rem'],
+    padding: Spacing[5],
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+  },
+  wisdomCard: {
+    borderBottomWidth: 4,
+    borderBottomColor: '#f97316',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  wisdomTopBar: {
     position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 4,
+    backgroundColor: '#f97316',
+    opacity: 0.3,
+  },
+  wisdomHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: Spacing[2],
+  },
+  wisdomLabel: {
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: Typography.letterSpacing.widest,
+    color: '#f97316',
+  },
+  wisdomText: {
+    fontSize: 18,
+    fontStyle: 'italic',
+  },
+  cardHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[3],
+    marginBottom: Spacing[4],
+  },
+  iconPill: {
+    padding: Spacing[3],
+    borderRadius: BorderRadius['2xl'],
+    backgroundColor: 'rgba(249, 115, 22, 0.1)',
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  cardSubtitle: {
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: Typography.letterSpacing.widest,
+    color: '#64748b',
+    marginTop: 2,
+  },
+  inputRow: {
+    marginTop: Spacing[2],
+    paddingVertical: Spacing[4],
+    paddingHorizontal: Spacing[4],
+    borderRadius: BorderRadius['2xl'],
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.4)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[3],
+  },
+  inputIcon: {
+    marginLeft: 4,
+  },
+  fakeInput: {
+    fontSize: Typography.fontSize.base,
+    opacity: 0.7,
+  },
+  bodyCopy: {
+    fontSize: 13,
+    opacity: 0.8,
+    marginTop: Spacing[2],
   },
 });
