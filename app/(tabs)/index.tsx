@@ -1,28 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { ScreenContainer } from '@/components/ScreenContainer';
+import { DropdownMenu } from '@/components/DropdownMenu';
 import { useTheme } from '@/constants/Theme';
 import { UkhoGradient } from '@/constants/Colors';
 import { BorderRadius, Spacing, Typography } from '@/constants/Styles';
-import { getAncestralWisdom } from '@/services/geminiService';
 
 export default function PlazaScreen() {
   const { theme } = useTheme();
-  const [wisdom, setWisdom] = useState('Connecting to the roots...');
-
-  useEffect(() => {
-    (async () => {
-      const text = await getAncestralWisdom();
-      setWisdom(text || 'Umuntu ngumuntu ngabantu.');
-    })();
-  }, []);
+  // Static wisdom quote - no API call needed
+  const wisdom = 'Umuntu ngumuntu ngabantu. A person is a person through other people.';
 
   return (
-    <ThemedView style={[styles.screen, { backgroundColor: theme.bgColor }]}>
+    <ScreenContainer>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -37,7 +31,7 @@ export default function PlazaScreen() {
           >
             <ThemedText style={styles.logoGlyph}>ü</ThemedText>
           </LinearGradient>
-          <View>
+          <View style={styles.brandContainer}>
             <ThemedText
               type="title"
               style={[
@@ -48,6 +42,9 @@ export default function PlazaScreen() {
               Ukho
             </ThemedText>
             <ThemedText style={styles.brandTagline}>CONNECT YOUR ROOTS</ThemedText>
+          </View>
+          <View style={styles.menuContainer}>
+            <DropdownMenu currentRoute="index" />
           </View>
         </View>
 
@@ -134,14 +131,11 @@ export default function PlazaScreen() {
           </ThemedText>
         </View>
       </ScrollView>
-    </ThemedView>
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
   scrollContent: {
     paddingHorizontal: Spacing[4],
     paddingTop: Spacing[4],
@@ -151,8 +145,15 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: Spacing[3],
     marginBottom: Spacing[2],
+  },
+  brandContainer: {
+    flex: 1,
+  },
+  menuContainer: {
+    marginLeft: 'auto',
   },
   logoBadge: {
     width: 48,
