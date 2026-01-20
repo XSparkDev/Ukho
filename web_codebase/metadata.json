@@ -1,8 +1,0 @@
-{
-  "name": "Ukho",
-  "description": "Connecting the roots of South Africa. Find your clan, recite your praises, and unite with your kin.",
-  "requestFramePermissions": [
-    "camera",
-    "geolocation"
-  ]
-}

@@ -1,6 +1,7 @@
 import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
 import { ThemeProvider as UkhoThemeProvider, useTheme } from '@/constants/Theme';
@@ -27,8 +28,10 @@ function RootStack() {
 
 export default function RootLayout() {
   return (
-    <UkhoThemeProvider>
-      <RootStack />
-    </UkhoThemeProvider>
+    <SafeAreaProvider>
+      <UkhoThemeProvider>
+        <RootStack />
+      </UkhoThemeProvider>
+    </SafeAreaProvider>
   );
 }

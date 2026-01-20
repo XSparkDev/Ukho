@@ -1,8 +1,8 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
 import { BrandColors } from '@/constants/Colors';
 
 export default function TabLayout() {
@@ -17,14 +17,30 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Plaza',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          // Hearth/home to reflect gathering place
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="local-fire-department" size={26} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="explore"
         options={{
           title: 'Contacts',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.3.fill" color={color} />,
+          // Community/kin grouping
+          tabBarIcon: ({ color }) => <MaterialIcons name="groups" size={26} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="nearby"
+        options={{
+          href: null, // Hide from bottom tab bar
+        }}
+      />
+      <Tabs.Screen
+        name="possible-kin"
+        options={{
+          href: null, // Hide from bottom tab bar
         }}
       />
     </Tabs>

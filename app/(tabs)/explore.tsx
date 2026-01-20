@@ -3,7 +3,8 @@ import { Image, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { ScreenContainer } from '@/components/ScreenContainer';
+import { DropdownMenu } from '@/components/DropdownMenu';
 import { useTheme } from '@/constants/Theme';
 import { BorderRadius, Spacing, Typography } from '@/constants/Styles';
 
@@ -100,7 +101,7 @@ export default function ContactsScreen() {
   );
 
   return (
-    <ThemedView style={[styles.screen, { backgroundColor: theme.bgColor }]}>
+    <ScreenContainer>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -116,7 +117,7 @@ export default function ContactsScreen() {
           ]}
         >
           <View style={styles.headerTopRow}>
-            <View>
+            <View style={styles.headerTitleContainer}>
               <ThemedText
                 style={[
                   styles.headerTitle,
@@ -126,6 +127,9 @@ export default function ContactsScreen() {
                 YOUR CLAN NETWORK
               </ThemedText>
               <ThemedText style={styles.headerSubtitle}>CONNECTING THE BLOODLINES</ThemedText>
+            </View>
+            <View style={styles.menuContainer}>
+              <DropdownMenu currentRoute="explore" />
             </View>
           </View>
           <View style={styles.searchRow}>
@@ -236,14 +240,11 @@ export default function ContactsScreen() {
           </>
         )}
       </ScrollView>
-    </ThemedView>
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
   scrollContent: {
     paddingHorizontal: Spacing[4],
     paddingTop: Spacing[4],
@@ -266,6 +267,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: Spacing[4],
+  },
+  headerTitleContainer: {
+    flex: 1,
+  },
+  menuContainer: {
+    marginLeft: Spacing[3],
   },
   headerTitle: {
     fontSize: 24,

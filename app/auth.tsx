@@ -11,7 +11,7 @@ import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { ScreenContainer } from '@/components/ScreenContainer';
 import { useTheme } from '@/constants/Theme';
 import { UkhoGradient } from '@/constants/Colors';
 import { BorderRadius, Spacing, Typography } from '@/constants/Styles';
@@ -37,7 +37,7 @@ export default function AuthScreen() {
   const isRegister = mode === 'register';
 
   return (
-    <ThemedView style={[styles.root, { backgroundColor: theme.bgColor }]}>
+    <ScreenContainer style={styles.root}>
       {/* Tribal Background Elements */}
       <View pointerEvents="none" style={styles.backgroundDecor}>
         <View style={styles.orangeBlurCircle} />
@@ -270,7 +270,7 @@ export default function AuthScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </ThemedView>
+    </ScreenContainer>
   );
 }
 
@@ -279,7 +279,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   root: {
-    flex: 1,
     position: 'relative',
   },
   backgroundDecor: {
