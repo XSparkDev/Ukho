@@ -32,6 +32,22 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="relations"
+        options={{
+          title: 'Connect',
+          // Messaging / connection hub
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="chat-bubble-outline" size={26} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          href: null, // keep settings off the bottom tab bar
+        }}
+      />
+      <Tabs.Screen
         name="nearby"
         options={{
           href: null, // Hide from bottom tab bar

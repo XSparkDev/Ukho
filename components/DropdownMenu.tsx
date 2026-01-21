@@ -53,8 +53,8 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({ currentRoute = 'inde
     },
     {
       id: 'relations',
-      label: 'Clan Relations',
-      icon: 'users',
+      label: 'Connect',
+      icon: 'message-circle',
       route: '/(tabs)/relations',
     },
     {
@@ -64,13 +64,10 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({ currentRoute = 'inde
       route: '/(tabs)/community',
     },
     {
-      id: 'discover',
-      label: 'Discover',
-      icon: 'search',
-      onPress: () => {
-        // Placeholder for future Discover screen
-        console.log('Discover - Coming soon');
-      },
+      id: 'settings',
+      label: 'Settings',
+      icon: 'settings',
+      route: '/settings',
     },
     // Temporarily hidden - can be restored when ready
     // {
@@ -135,6 +132,7 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({ currentRoute = 'inde
     if (itemId === 'contacts' && currentRoute === 'explore') return true;
     if (itemId === 'relations' && currentRoute === 'relations') return true;
     if (itemId === 'community' && currentRoute === 'community') return true;
+    if (itemId === 'settings' && currentRoute === 'settings') return true;
     return false;
   };
 

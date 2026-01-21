@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { Image, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Image, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/themed-text';
@@ -22,6 +22,78 @@ type Kin = {
   clan: string;
   matchReason: string;
   avatar: string;
+};
+
+type CollapsibleSectionProps = {
+  label: string;
+  icon: React.ReactNode;
+  titleColor: string;
+  chevronColor: string;
+  children: React.ReactNode;
+};
+
+const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
+  label,
+  icon,
+  titleColor,
+  chevronColor,
+  children,
+}) => {
+  const [expanded, setExpanded] = useState(false);
+  const [contentHeight, setContentHeight] = useState(0);
+  const animated = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(animated, {
+      toValue: expanded ? 1 : 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  }, [expanded, animated]);
+
+  const onLayoutContent = (event: any) => {
+    const height = event.nativeEvent.layout.height;
+    if (height > 0 && contentHeight === 0) {
+      setContentHeight(height);
+    }
+  };
+
+  const heightStyle =
+    contentHeight === 0
+      ? {}
+      : {
+          height: animated.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0, contentHeight],
+          }),
+        };
+
+  const chevronRotation = animated.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '90deg'],
+  });
+
+  return (
+    <View>
+      <TouchableOpacity
+        style={styles.sectionHeader}
+        onPress={() => setExpanded((prev) => !prev)}
+        activeOpacity={0.8}
+      >
+        <View style={styles.sectionHeaderLeft}>
+          {icon}
+          <ThemedText style={[styles.sectionTitle, { color: titleColor }]}>{label}</ThemedText>
+        </View>
+        <Animated.View style={{ transform: [{ rotate: chevronRotation }] }}>
+          <Feather name="chevron-right" size={16} color={chevronColor} />
+        </Animated.View>
+      </TouchableOpacity>
+
+      <Animated.View style={[{ overflow: 'hidden', opacity: animated }, heightStyle]}>
+        <View onLayout={onLayoutContent}>{children}</View>
+      </Animated.View>
+    </View>
+  );
 };
 
 const VERIFIED_ELDERS: Elder[] = [
@@ -124,9 +196,9 @@ export default function ContactsScreen() {
                   { color: theme.textMain, fontFamily: Typography.spaceGrotesk },
                 ]}
               >
-                YOUR CLAN NETWORK
+                DISCOVER
               </ThemedText>
-              <ThemedText style={styles.headerSubtitle}>CONNECTING THE BLOODLINES</ThemedText>
+              <ThemedText style={styles.headerSubtitle}>FIND YOUR KIN</ThemedText>
             </View>
             <View style={styles.menuContainer}>
               <DropdownMenu currentRoute="explore" />
@@ -156,59 +228,58 @@ export default function ContactsScreen() {
           </View>
         </View>
 
-        {/* Verified Elders */}
-        <View style={styles.sectionHeader}>
-          <Feather name="shield" size={20} color="#10b981" />
-          <ThemedText style={[styles.sectionTitle, { color: theme.textMain }]}>
-            VERIFIED ELDERS
-          </ThemedText>
-        </View>
-
-        <View style={styles.eldersGrid}>
-          {filteredElders.map((elder) => (
-            <View
-              key={elder.id}
-              style={[
-                styles.elderCard,
-                {
-                  backgroundColor: theme.panelBg,
-                  borderColor: theme.borderColor,
-                },
-              ]}
-            >
-              <View style={styles.elderRow}>
-                <View style={styles.elderAvatarWrapper}>
-                  <Image source={{ uri: elder.avatar }} style={styles.elderAvatar} />
-                  <View style={styles.verifyDot}>
-                    <Feather name="shield" size={10} color="#fff" />
+        {/* Verified Elders (collapsible) */}
+        <CollapsibleSection
+          label="VERIFIED ELDERS"
+          icon={<Feather name="shield" size={20} color="#10b981" />}
+          titleColor={theme.textMain}
+          chevronColor={theme.textDim}
+        >
+          <View style={styles.eldersGrid}>
+            {filteredElders.map((elder) => (
+              <View
+                key={elder.id}
+                style={[
+                  styles.elderCard,
+                  {
+                    backgroundColor: theme.panelBg,
+                    borderColor: theme.borderColor,
+                  },
+                ]}
+              >
+                <View style={styles.elderRow}>
+                  <View style={styles.elderAvatarWrapper}>
+                    <Image source={{ uri: elder.avatar }} style={styles.elderAvatar} />
+                    <View style={styles.verifyDot}>
+                      <Feather name="shield" size={10} color="#fff" />
+                    </View>
                   </View>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <ThemedText style={[styles.elderName, { color: theme.textMain }]}>
-                    {elder.name}
-                  </ThemedText>
-                  <ThemedText style={styles.elderClan}>{elder.clan} Clan</ThemedText>
-                  <ThemedText style={styles.elderRole}>{elder.role}</ThemedText>
-                </View>
-                <View>
-                  <View style={styles.messageButton}>
-                    <Feather name="message-circle" size={18} color="#f97316" />
+                  <View style={{ flex: 1 }}>
+                    <ThemedText style={[styles.elderName, { color: theme.textMain }]}>
+                      {elder.name}
+                    </ThemedText>
+                    <ThemedText style={styles.elderClan}>{elder.clan} Clan</ThemedText>
+                    <ThemedText style={styles.elderRole}>{elder.role}</ThemedText>
+                  </View>
+                  <View>
+                    <View style={styles.messageButton}>
+                      <Feather name="message-circle" size={18} color="#f97316" />
+                    </View>
                   </View>
                 </View>
               </View>
-            </View>
-          ))}
-        </View>
+            ))}
+          </View>
+        </CollapsibleSection>
 
-        {/* Potential Kin (compact grid) */}
+        {/* Potential Kin (compact grid, collapsible) */}
         {!searchQuery && (
-          <>
-            <View style={styles.sectionHeader}>
-              <Feather name="star" size={20} color="#f97316" />
-              <ThemedText style={[styles.sectionTitle, { color: theme.textMain }]}>
-                POTENTIAL KIN
-              </ThemedText>
-            </View>
+          <CollapsibleSection
+            label="POTENTIAL KIN"
+            icon={<Feather name="star" size={20} color="#f97316" />}
+            titleColor={theme.textMain}
+            chevronColor={theme.textDim}
+          >
             <View
               style={[
                 styles.potentialCard,
@@ -237,7 +308,7 @@ export default function ContactsScreen() {
                 ))}
               </View>
             </View>
-          </>
+          </CollapsibleSection>
         )}
       </ScrollView>
     </ScreenContainer>
@@ -310,6 +381,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing[1],
     marginTop: Spacing[4],
   },
+  sectionHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[2],
+  },
   sectionTitle: {
     fontSize: 14,
     fontWeight: '900',
@@ -320,9 +396,13 @@ const styles = StyleSheet.create({
     gap: Spacing[3],
   },
   elderCard: {
-    borderRadius: BorderRadius['2rem'],
-    padding: Spacing[4],
+    borderRadius: BorderRadius['2.5rem'],
+    padding: Spacing[5],
     borderWidth: 1,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
   },
   elderRow: {
     flexDirection: 'row',

@@ -48,27 +48,6 @@ export default function PlazaScreen() {
           </View>
         </View>
 
-        {/* Ancestral Wisdom Card */}
-        <View
-          style={[
-            styles.glassCard,
-            styles.wisdomCard,
-            {
-              backgroundColor: theme.panelBg,
-              borderColor: theme.borderColor,
-            },
-          ]}
-        >
-          <View style={styles.wisdomTopBar} />
-          <View style={styles.wisdomHeaderRow}>
-            <Feather name="shield" size={18} color="#f97316" />
-            <ThemedText style={styles.wisdomLabel}>ANCESTRAL WISDOM</ThemedText>
-          </View>
-          <ThemedText style={[styles.wisdomText, { color: theme.textMain }]}>
-            “{wisdom}”
-          </ThemedText>
-        </View>
-
         {/* Clan Search Card (simplified first pass) */}
         <View
           style={[
@@ -128,6 +107,27 @@ export default function PlazaScreen() {
           <ThemedText style={styles.bodyCopy}>
             Soon you&apos;ll be able to pick your clan and have praises recited with Gemini TTS,
             just like on the web Plaza.
+          </ThemedText>
+        </View>
+
+        {/* Ancestral Wisdom Card */}
+        <View
+          style={[
+            styles.glassCard,
+            styles.wisdomCard,
+            {
+              backgroundColor: theme.panelBg,
+              borderColor: theme.borderColor,
+            },
+          ]}
+        >
+          <View style={styles.wisdomTopBar} />
+          <View style={styles.wisdomHeaderRow}>
+            <Feather name="shield" size={18} color="#f97316" />
+            <ThemedText style={styles.wisdomLabel}>ANCESTRAL WISDOM</ThemedText>
+          </View>
+          <ThemedText style={[styles.wisdomText, { color: theme.textMain }]}>
+            "{wisdom}"
           </ThemedText>
         </View>
       </ScrollView>
