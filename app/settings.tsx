@@ -1,31 +1,83 @@
-import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
+import { AnimatedCard } from '@/components/AnimatedCard';
+import { DropdownMenu } from '@/components/DropdownMenu';
 import { ScreenContainer } from '@/components/ScreenContainer';
 import { ThemedText } from '@/components/themed-text';
 import { BrandColors } from '@/constants/Colors';
-import { BorderRadius, Spacing, Typography } from '@/constants/Styles';
+import { BorderRadius, CardStyles, Spacing, Typography } from '@/constants/Styles';
 import { useTheme } from '@/constants/Theme';
 
 export default function SettingsScreen() {
   const { theme } = useTheme();
+  const router = useRouter();
 
   const sections = [
-    { id: 'account', title: 'Account', icon: 'user' },
-    { id: 'notifications', title: 'Notifications', icon: 'bell' },
-    { id: 'appearance', title: 'Appearance', icon: 'sun' },
-    { id: 'privacy', title: 'Privacy', icon: 'lock' },
+    {
+      id: 'account',
+      title: 'Account',
+      icon: 'user',
+      description: 'Profile, email, password, and account details',
+      onPress: () => {
+        router.push('/account');
+      },
+    },
+    {
+      id: 'preferences',
+      title: 'Preferences',
+      icon: 'sliders',
+      description: 'Language, region, and display preferences',
+      onPress: () => {
+        router.push('/preferences');
+      },
+    },
+    {
+      id: 'notifications',
+      title: 'Notifications',
+      icon: 'bell',
+      description: 'Manage alerts, messages, and updates',
+      onPress: () => {
+        router.push('/notifications');
+      },
+    },
+    {
+      id: 'privacy',
+      title: 'Privacy',
+      icon: 'lock',
+      description: 'Data privacy, visibility, and security',
+      onPress: () => {
+        router.push('/privacy');
+      },
+    },
+    {
+      id: 'about',
+      title: 'About Ukho',
+      icon: 'info',
+      description: 'Version, terms, and support information',
+      onPress: () => {
+        router.push('/about');
+      },
+    },
   ];
 
   return (
     <ScreenContainer>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.headerRow}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backButton}
+            activeOpacity={0.8}
+          >
+            <Feather name="arrow-left" size={20} color={theme.textMain} />
+          </TouchableOpacity>
           <View style={styles.iconBadge}>
             <Feather name="settings" size={18} color="#fff" />
           </View>
-          <View>
+          <View style={styles.headerContent}>
             <ThemedText
               style={[
                 styles.title,
@@ -34,33 +86,43 @@ export default function SettingsScreen() {
             >
               Settings
             </ThemedText>
-            <ThemedText style={[styles.subtitle, { color: theme.textDim }]}>
-              Manage your Ukho experience
+            <ThemedText style={[styles.subtitle, { color: BrandColors.orange500 }]}>
+              MANAGE YOUR UKHO EXPERIENCE
             </ThemedText>
+          </View>
+          <View style={styles.menuContainer}>
+            <DropdownMenu currentRoute="settings" />
           </View>
         </View>
 
         <View style={styles.sectionList}>
           {sections.map((section) => (
-            <View
+            <AnimatedCard
               key={section.id}
+              onPress={section.onPress}
               style={[
-                styles.sectionCard,
-                { backgroundColor: theme.panelBg, borderColor: theme.borderColor },
+                CardStyles.base,
+                {
+                  backgroundColor: theme.panelBg,
+                  borderColor: theme.borderColor,
+                },
               ]}
             >
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionIcon}>
-                  <Feather name={section.icon as any} size={16} color={BrandColors.orange500} />
+                  <Feather name={section.icon as any} size={20} color={BrandColors.orange500} />
                 </View>
-                <ThemedText style={[styles.sectionTitle, { color: theme.textMain }]}>
-                  {section.title}
-                </ThemedText>
+                <View style={styles.sectionContent}>
+                  <ThemedText style={[styles.sectionTitle, { color: theme.textMain }]}>
+                    {section.title}
+                  </ThemedText>
+                  <ThemedText style={[styles.sectionDescription, { color: theme.textDim }]}>
+                    {section.description}
+                  </ThemedText>
+                </View>
+                <Feather name="chevron-right" size={18} color={theme.textDim} />
               </View>
-              <ThemedText style={[styles.sectionHint, { color: theme.textDim }]}>
-                Placeholder content for {section.title.toLowerCase()} settings.
-              </ThemedText>
-            </View>
+            </AnimatedCard>
           ))}
         </View>
       </ScrollView>
@@ -79,7 +141,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing[3],
-    marginBottom: Spacing[1],
+    marginBottom: Spacing[2],
+  },
+  backButton: {
+    padding: Spacing[2],
   },
   iconBadge: {
     width: 40,
@@ -89,6 +154,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  headerContent: {
+    flex: 1,
+  },
+  menuContainer: {
+    marginLeft: Spacing[2],
+  },
   title: {
     fontSize: 22,
     fontWeight: '900',
@@ -97,41 +168,36 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: Typography.fontSize.sm,
     fontWeight: '600',
+    color: BrandColors.orange500,
   },
   sectionList: {
-    gap: Spacing[3],
-  },
-  sectionCard: {
-    borderRadius: BorderRadius['2xl'],
-    padding: Spacing[4],
-    borderWidth: 1,
-    gap: Spacing[1],
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 8 },
+    gap: Spacing[4],
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing[2],
+    gap: Spacing[3],
   },
   sectionIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: BorderRadius.lg,
-    backgroundColor: 'rgba(249, 115, 22, 0.12)',
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius['2xl'],
+    backgroundColor: 'rgba(249, 115, 22, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  sectionContent: {
+    flex: 1,
+    gap: Spacing[1],
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '800',
   },
-  sectionHint: {
+  sectionDescription: {
     fontSize: Typography.fontSize.sm,
     fontWeight: '500',
-    marginTop: Spacing[1],
+    opacity: 0.8,
   },
 });
 

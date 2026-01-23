@@ -6,7 +6,7 @@ import { DropdownMenu } from '@/components/DropdownMenu';
 import { ScreenContainer } from '@/components/ScreenContainer';
 import { ThemedText } from '@/components/themed-text';
 import { BrandColors } from '@/constants/Colors';
-import { BorderRadius, Spacing, Typography } from '@/constants/Styles';
+import { BorderRadius, CardStyles, Spacing, Typography } from '@/constants/Styles';
 import { useTheme } from '@/constants/Theme';
 
 type CommunityPost = {
@@ -121,8 +121,8 @@ export default function CommunityScreen() {
               >
                 Community Stories
               </ThemedText>
-              <ThemedText style={[styles.headerSubtitle, { color: theme.textDim }]}>
-                Voices from the Ukho network
+              <ThemedText style={[styles.headerSubtitle, { color: BrandColors.orange500 }]}>
+                VOICES FROM THE UKHO NETWORK
               </ThemedText>
             </View>
           </View>
@@ -189,6 +189,7 @@ export default function CommunityScreen() {
             <View
               key={post.id}
               style={[
+                CardStyles.base,
                 styles.postCard,
                 {
                   backgroundColor: theme.panelBg,
@@ -311,6 +312,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: Typography.letterSpacing.widest,
     textTransform: 'uppercase',
+     color: BrandColors.orange500,
   },
   menuContainer: {
     marginLeft: Spacing[2],
@@ -391,13 +393,6 @@ const styles = StyleSheet.create({
     gap: Spacing[4],
   },
   postCard: {
-    borderRadius: BorderRadius['2.5rem'],
-    padding: Spacing[5],
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 12 },
   },
   postHeaderRow: {
     flexDirection: 'row',

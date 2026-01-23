@@ -1,12 +1,14 @@
+import { Feather } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Image, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
 
-import { ThemedText } from '@/components/themed-text';
-import { ScreenContainer } from '@/components/ScreenContainer';
 import { DropdownMenu } from '@/components/DropdownMenu';
+import { ScreenContainer } from '@/components/ScreenContainer';
+import { ThemedText } from '@/components/themed-text';
+import { AnimationDurations, AnimationEasing } from '@/constants/Animations';
+import { BrandColors } from '@/constants/Colors';
+import { BorderRadius, CardStyles, Spacing, Typography } from '@/constants/Styles';
 import { useTheme } from '@/constants/Theme';
-import { BorderRadius, Spacing, Typography } from '@/constants/Styles';
 
 type Elder = {
   id: string;
@@ -46,7 +48,8 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   useEffect(() => {
     Animated.timing(animated, {
       toValue: expanded ? 1 : 0,
-      duration: 200,
+      duration: AnimationDurations.normal,
+      easing: AnimationEasing.easeInOut,
       useNativeDriver: false,
     }).start();
   }, [expanded, animated]);
@@ -240,6 +243,7 @@ export default function ContactsScreen() {
               <View
                 key={elder.id}
                 style={[
+                  CardStyles.base,
                   styles.elderCard,
                   {
                     backgroundColor: theme.panelBg,
@@ -282,6 +286,7 @@ export default function ContactsScreen() {
           >
             <View
               style={[
+                CardStyles.base,
                 styles.potentialCard,
                 {
                   backgroundColor: theme.panelBg,
@@ -355,7 +360,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: Typography.letterSpacing.widest,
-    color: '#64748b',
+    color: BrandColors.orange500,
   },
   searchRow: {
     flexDirection: 'row',
@@ -396,13 +401,6 @@ const styles = StyleSheet.create({
     gap: Spacing[3],
   },
   elderCard: {
-    borderRadius: BorderRadius['2.5rem'],
-    padding: Spacing[5],
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 10 },
   },
   elderRow: {
     flexDirection: 'row',
@@ -452,9 +450,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(249, 115, 22, 0.1)',
   },
   potentialCard: {
-    borderRadius: BorderRadius['2.5rem'],
-    padding: Spacing[5],
-    borderWidth: 1,
     marginTop: Spacing[2],
   },
   kinGrid: {

@@ -32,6 +32,16 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="community"
+        options={{
+          title: 'Community',
+          // Community stories and network
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="people" size={26} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="relations"
         options={{
           title: 'Connect',

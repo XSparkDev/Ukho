@@ -8,7 +8,7 @@ import { ScreenContainer } from '@/components/ScreenContainer';
 import { DropdownMenu } from '@/components/DropdownMenu';
 import { useTheme } from '@/constants/Theme';
 import { UkhoGradient } from '@/constants/Colors';
-import { BorderRadius, Spacing, Typography } from '@/constants/Styles';
+import { BorderRadius, CardStyles, Spacing, Typography } from '@/constants/Styles';
 
 export default function PlazaScreen() {
   const { theme } = useTheme();
@@ -49,15 +49,7 @@ export default function PlazaScreen() {
         </View>
 
         {/* Clan Search Card (simplified first pass) */}
-        <View
-          style={[
-            styles.glassCard,
-            {
-              backgroundColor: theme.panelBg,
-              borderColor: theme.borderColor,
-            },
-          ]}
-        >
+        <View style={[CardStyles.base, { backgroundColor: theme.panelBg, borderColor: theme.borderColor }]}>
           <View style={styles.cardHeaderRow}>
             <View style={styles.iconPill}>
               <Feather name="search" size={22} color="#f97316" />
@@ -84,15 +76,7 @@ export default function PlazaScreen() {
         </View>
 
         {/* Izithakazelo teaser (placeholder for full praises card) */}
-        <View
-          style={[
-            styles.glassCard,
-            {
-              backgroundColor: theme.panelBg,
-              borderColor: theme.borderColor,
-            },
-          ]}
-        >
+        <View style={[CardStyles.base, { backgroundColor: theme.panelBg, borderColor: theme.borderColor }]}>
           <View style={styles.cardHeaderRow}>
             <View style={styles.iconPill}>
               <Feather name="volume-2" size={22} color="#f97316" />
@@ -113,7 +97,7 @@ export default function PlazaScreen() {
         {/* Ancestral Wisdom Card */}
         <View
           style={[
-            styles.glassCard,
+            CardStyles.base,
             styles.wisdomCard,
             {
               backgroundColor: theme.panelBg,
@@ -139,15 +123,15 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: Spacing[4],
     paddingTop: Spacing[4],
-    paddingBottom: Spacing[8],
-    gap: Spacing[4],
+    paddingBottom: Spacing[4], // Reduced since wisdom card can reach bottom
+    gap: Spacing[8], // Increased from Spacing[6] for more breathing room
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing[3],
-    marginBottom: Spacing[2],
+    marginBottom: Spacing[6], // Increased from Spacing[4] for more space after header
   },
   brandContainer: {
     flex: 1,
@@ -178,15 +162,6 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: Typography.letterSpacing.widest,
     color: '#f97316',
-  },
-  glassCard: {
-    borderRadius: BorderRadius['2.5rem'],
-    padding: Spacing[5],
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 10 },
   },
   wisdomCard: {
     borderBottomWidth: 4,

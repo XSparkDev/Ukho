@@ -75,6 +75,19 @@ export const Typography = {
   },
 };
 
+// Shared card styles based on Plaza "Ancestral Wisdom" card
+export const CardStyles = {
+  base: {
+    borderRadius: BorderRadius['2.5rem'],
+    padding: Spacing[5],
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+  },
+};
+
 // Common Shadow Styles
 export const Shadows = {
   card: {

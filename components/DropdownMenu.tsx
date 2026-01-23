@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { AnimationDurations, AnimationEasing } from '@/constants/Animations';
 import { BrandColors, UkhoGradient } from '@/constants/Colors';
 import { BorderRadius, Spacing, Typography } from '@/constants/Styles';
 import { useTheme } from '@/constants/Theme';
@@ -86,12 +87,14 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({ currentRoute = 'inde
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 0,
-          duration: 200,
+          duration: AnimationDurations.normal,
+          easing: AnimationEasing.easeInOut,
           useNativeDriver: true,
         }),
         Animated.timing(translateAnim, {
           toValue: 10,
-          duration: 200,
+          duration: AnimationDurations.normal,
+          easing: AnimationEasing.easeInOut,
           useNativeDriver: true,
         }),
       ]).start(() => setIsOpen(false));
@@ -101,12 +104,14 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({ currentRoute = 'inde
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
-          duration: 200,
+          duration: AnimationDurations.normal,
+          easing: AnimationEasing.easeInOut,
           useNativeDriver: true,
         }),
         Animated.timing(translateAnim, {
           toValue: 0,
-          duration: 200,
+          duration: AnimationDurations.normal,
+          easing: AnimationEasing.easeInOut,
           useNativeDriver: true,
         }),
       ]).start();
@@ -305,7 +310,7 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({ currentRoute = 'inde
                 <ThemedText
                   style={[styles.footerButtonText, { color: BrandColors.red500 }]}
                 >
-                  Exit
+                  Log Out
                 </ThemedText>
               </TouchableOpacity>
             </View>
