@@ -16,6 +16,10 @@ import { useTheme } from '@/constants/Theme';
 import { UkhoGradient } from '@/constants/Colors';
 import { BorderRadius, Spacing, Typography } from '@/constants/Styles';
 import { LinearGradient } from 'expo-linear-gradient';
+import { login, register } from '../services/authService';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { Toast } from '@/components/Toast';
+import { ROUTES } from '@/constants/routes';
 
 type AuthMode = 'login' | 'register';
 
@@ -26,15 +30,55 @@ export default function AuthScreen() {
   const [cellNumber, setCellNumber] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [clanName, setClanName] = useState('');
-
-  const handleSubmit = () => {
-    // For now we just navigate to the main tabs.
-    // User data wiring will come when we port the full App.tsx logic.
-    router.replace('/(tabs)');
-  };
+  const [email, setEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [toastState, setToastState] = useState<{ message: string; color: string } | null>(
+    null
+  );
 
   const isRegister = mode === 'register';
+
+  const getToastColor = (code?: string | null) => {
+    switch (code) {
+      case 'INVALID_CREDENTIALS':
+        return '#dc2626'; // red-600
+      case 'EMAIL_TAKEN':
+        return '#f97316'; // orange-500
+      case 'VALIDATION_ERROR':
+        return '#eab308'; // yellow-500
+      default:
+        return '#ef4444'; // red-500 generic error
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      if (isRegister) {
+        await register({ cellNumber, password, fullName, email });
+      } else {
+        await login({ cellNumber, password });
+      }
+
+      router.replace(ROUTES.TABS_ROOT);
+    } catch (error) {
+      const err: any = error;
+      console.warn('Auth error:', err);
+      const message =
+        (err && typeof err.message === 'string' && err.message) ||
+        'Something went wrong. Please try again.';
+      const code = err && typeof err.code === 'string' ? err.code : undefined;
+      const color = getToastColor(code);
+
+      setToastState({ message, color });
+      setTimeout(() => {
+        setToastState(null);
+      }, 3000);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <ScreenContainer style={styles.root}>
@@ -150,19 +194,20 @@ export default function AuthScreen() {
                         ]}
                       />
                     </View>
-                    {/* Clan Name */}
+                    {/* Email */}
                     <View style={styles.inputWrapper}>
                       <Feather
-                        name="map-pin"
+                        name="mail"
                         size={18}
                         color="rgba(249, 115, 22, 0.6)"
                         style={styles.inputIcon}
                       />
                       <TextInput
-                        value={clanName}
-                        onChangeText={setClanName}
-                        placeholder="Clan Name (e.g. Khumalo)"
+                        value={email}
+                        onChangeText={setEmail}
+                        placeholder="Email"
                         placeholderTextColor={theme.textDim}
+                        keyboardType="email-address"
                         style={[
                           styles.input,
                           {
@@ -237,15 +282,28 @@ export default function AuthScreen() {
                   colors={[UkhoGradient.start, UkhoGradient.end]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
-                  style={styles.submitButton}
+                  style={[
+                    styles.submitButton,
+                    isSubmitting && { opacity: 0.7 },
+                  ]}
                 >
                   <ThemedText
-                    onPress={handleSubmit}
+                    onPress={isSubmitting ? undefined : handleSubmit}
                     style={styles.submitText}
                   >
-                    {isRegister ? 'JOIN THE LINEAGE' : 'ASCEND TO PLAZA'}
+                    {isSubmitting
+                      ? isRegister
+                        ? 'ALIGNING ANCESTRAL LINES...'
+                        : 'ASCENDING...'
+                      : isRegister
+                        ? 'JOIN THE LINEAGE'
+                        : 'ASCEND TO PLAZA'}
                   </ThemedText>
-                  <Feather name="chevron-right" size={18} color="#fff" />
+                  {isSubmitting ? (
+                    <LoadingSpinner size="small" color="#ffffff" />
+                  ) : (
+                    <Feather name="chevron-right" size={18} color="#fff" />
+                  )}
                 </LinearGradient>
               </View>
 
@@ -270,6 +328,9 @@ export default function AuthScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      {toastState && (
+        <Toast message={toastState.message} backgroundColor={toastState.color} />
+      )}
     </ScreenContainer>
   );
 }

@@ -1,5 +1,5 @@
-import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import React, { useState } from 'react';
+import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -14,6 +14,15 @@ export default function PlazaScreen() {
   const { theme } = useTheme();
   // Static wisdom quote - no API call needed
   const wisdom = 'Umuntu ngumuntu ngabantu. A person is a person through other people.';
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearchSubmit = () => {
+    const trimmed = searchQuery.trim();
+    if (!trimmed) return;
+
+    // TODO: Wire this into real clan search once backend / search logic is ready.
+    console.log('Submitting clan search for:', trimmed);
+  };
 
   return (
     <ScreenContainer>
@@ -77,9 +86,15 @@ export default function PlazaScreen() {
               color="rgba(249, 115, 22, 0.6)"
               style={styles.inputIcon}
             />
-            <ThemedText style={[styles.fakeInput, { color: theme.textDim }]}>
-              Enter surname or clan name...
-            </ThemedText>
+            <TextInput
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Enter surname or clan name..."
+              placeholderTextColor={theme.textDim}
+              returnKeyType="search"
+              onSubmitEditing={handleSearchSubmit}
+              style={[styles.fakeInput, { color: theme.textMain, flex: 1 }]}
+            />
           </View>
         </View>
 

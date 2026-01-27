@@ -5,6 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
 import { ThemeProvider as UkhoThemeProvider, useTheme } from '@/constants/Theme';
+import { ROUTES } from '@/constants/routes';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -16,10 +17,10 @@ function RootStack() {
 
   return (
     <NavigationThemeProvider value={navTheme}>
-      <Stack initialRouteName="auth">
-        <Stack.Screen name="auth" options={{ headerShown: false }} />
+      <Stack initialRouteName={ROUTES.AUTH}>
+        <Stack.Screen name={ROUTES.AUTH} options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+        <Stack.Screen name={ROUTES.MODAL} options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>
       <StatusBar style={isLightMode ? 'dark' : 'light'} />
     </NavigationThemeProvider>
