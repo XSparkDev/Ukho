@@ -1,6 +1,6 @@
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Tabs } from 'expo-router';
 import React from 'react';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { BrandColors } from '@/constants/Colors';
@@ -27,15 +27,20 @@ export default function TabLayout() {
         name="explore"
         options={{
           title: 'Contacts',
-          // Community/kin grouping
           tabBarIcon: ({ color }) => <MaterialIcons name="groups" size={26} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="community"
+        options={{
+          title: 'Community',
+          tabBarIcon: ({ color }) => <MaterialIcons name="people" size={26} color={color} />,
         }}
       />
       <Tabs.Screen
         name="relations"
         options={{
           title: 'Connect',
-          // Messaging / connection hub
           tabBarIcon: ({ color }) => (
             <MaterialIcons name="chat-bubble-outline" size={26} color={color} />
           ),

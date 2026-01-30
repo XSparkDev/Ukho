@@ -1,7 +1,9 @@
-import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
+import { DropdownMenu } from '@/components/DropdownMenu';
 import { ScreenContainer } from '@/components/ScreenContainer';
 import { ThemedText } from '@/components/themed-text';
 import { BrandColors } from '@/constants/Colors';
@@ -10,22 +12,31 @@ import { useTheme } from '@/constants/Theme';
 
 export default function SettingsScreen() {
   const { theme } = useTheme();
+  const router = useRouter();
 
-  const sections = [
-    { id: 'account', title: 'Account', icon: 'user' },
-    { id: 'notifications', title: 'Notifications', icon: 'bell' },
-    { id: 'appearance', title: 'Appearance', icon: 'sun' },
-    { id: 'privacy', title: 'Privacy', icon: 'lock' },
+  const sections: { id: string; title: string; icon: string; route: string }[] = [
+    { id: 'account', title: 'Account', icon: 'user', route: '/account' },
+    { id: 'preferences', title: 'Preferences', icon: 'sliders', route: '/preferences' },
+    { id: 'notifications', title: 'Notifications', icon: 'bell', route: '/notifications' },
+    { id: 'privacy', title: 'Privacy', icon: 'lock', route: '/privacy' },
+    { id: 'about', title: 'About Ukho', icon: 'info', route: '/about' },
   ];
 
   return (
     <ScreenContainer>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.headerRow}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backButton}
+            activeOpacity={0.8}
+          >
+            <Feather name="arrow-left" size={20} color={theme.textMain} />
+          </TouchableOpacity>
           <View style={styles.iconBadge}>
             <Feather name="settings" size={18} color="#fff" />
           </View>
-          <View>
+          <View style={styles.headerContent}>
             <ThemedText
               style={[
                 styles.title,
@@ -34,16 +45,19 @@ export default function SettingsScreen() {
             >
               Settings
             </ThemedText>
-            <ThemedText style={[styles.subtitle, { color: theme.textDim }]}>
-              Manage your Ukho experience
-            </ThemedText>
+            <ThemedText style={styles.subtitle}>MANAGE YOUR UKHO EXPERIENCE</ThemedText>
+          </View>
+          <View style={styles.menuContainer}>
+            <DropdownMenu currentRoute="settings" />
           </View>
         </View>
 
         <View style={styles.sectionList}>
           {sections.map((section) => (
-            <View
+            <TouchableOpacity
               key={section.id}
+              activeOpacity={0.8}
+              onPress={() => router.push(section.route)}
               style={[
                 styles.sectionCard,
                 { backgroundColor: theme.panelBg, borderColor: theme.borderColor },
@@ -56,11 +70,12 @@ export default function SettingsScreen() {
                 <ThemedText style={[styles.sectionTitle, { color: theme.textMain }]}>
                   {section.title}
                 </ThemedText>
+                <Feather name="chevron-right" size={18} color={theme.textDim} />
               </View>
               <ThemedText style={[styles.sectionHint, { color: theme.textDim }]}>
-                Placeholder content for {section.title.toLowerCase()} settings.
+                Tap to open {section.title.toLowerCase()} settings.
               </ThemedText>
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
       </ScrollView>
@@ -81,6 +96,14 @@ const styles = StyleSheet.create({
     gap: Spacing[3],
     marginBottom: Spacing[1],
   },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+  },
   iconBadge: {
     width: 40,
     height: 40,
@@ -88,6 +111,12 @@ const styles = StyleSheet.create({
     backgroundColor: BrandColors.orange500,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  headerContent: {
+    flex: 1,
+  },
+  menuContainer: {
+    marginLeft: 'auto',
   },
   title: {
     fontSize: 22,
@@ -97,6 +126,8 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: Typography.fontSize.sm,
     fontWeight: '600',
+    textTransform: 'uppercase',
+    color: BrandColors.orange500,
   },
   sectionList: {
     gap: Spacing[3],

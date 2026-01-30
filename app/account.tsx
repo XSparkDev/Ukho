@@ -18,7 +18,7 @@ export default function AccountScreen() {
   const accountOptions = [
     {
       id: 'edit-profile',
-      title: 'Edit Profile',
+      title: 'Edit profile',
       icon: 'user',
       description: 'Update your profile picture, bio, and personal information',
       onPress: () => {
@@ -26,17 +26,8 @@ export default function AccountScreen() {
       },
     },
     {
-      id: 'change-display-name',
-      title: 'Change Display Name',
-      icon: 'type',
-      description: 'Update how your name appears to other users',
-      onPress: () => {
-        console.log('Navigate to Change Display Name');
-      },
-    },
-    {
       id: 'change-email',
-      title: 'Change Email',
+      title: 'Change email',
       icon: 'mail',
       description: 'Update your email address for account recovery',
       onPress: () => {
@@ -45,7 +36,7 @@ export default function AccountScreen() {
     },
     {
       id: 'change-password',
-      title: 'Change Password',
+      title: 'Change password',
       icon: 'key',
       description: 'Update your account password for security',
       onPress: () => {
@@ -54,20 +45,10 @@ export default function AccountScreen() {
     },
     {
       id: 'manage-clan',
-      title: 'Manage Clan Affiliations',
+      title: 'Manage clan affiliation',
       icon: 'users',
-      description: 'Add, edit, or remove your clan connections',
       onPress: () => {
         console.log('Navigate to Manage Clan Affiliations');
-      },
-    },
-    {
-      id: 'delete-account',
-      title: 'Delete Account',
-      icon: 'trash-2',
-      description: 'Permanently delete your account and all data',
-      onPress: () => {
-        setShowDeleteModal(true);
       },
     },
   ];

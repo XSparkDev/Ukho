@@ -305,7 +305,7 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({ currentRoute = 'inde
                 <ThemedText
                   style={[styles.footerButtonText, { color: BrandColors.red500 }]}
                 >
-                  Exit
+                  Log Out
                 </ThemedText>
               </TouchableOpacity>
             </View>

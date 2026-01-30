@@ -1,12 +1,13 @@
+import { Feather } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Image, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
 
-import { ThemedText } from '@/components/themed-text';
-import { ScreenContainer } from '@/components/ScreenContainer';
 import { DropdownMenu } from '@/components/DropdownMenu';
-import { useTheme } from '@/constants/Theme';
+import { ScreenContainer } from '@/components/ScreenContainer';
+import { ThemedText } from '@/components/themed-text';
+import { BrandColors } from '@/constants/Colors';
 import { BorderRadius, Spacing, Typography } from '@/constants/Styles';
+import { useTheme } from '@/constants/Theme';
 
 type Elder = {
   id: string;
@@ -198,7 +199,9 @@ export default function ContactsScreen() {
               >
                 DISCOVER
               </ThemedText>
-              <ThemedText style={styles.headerSubtitle}>FIND YOUR KIN</ThemedText>
+              <ThemedText style={[styles.headerSubtitle, { color: BrandColors.orange500 }]}>
+                FIND YOUR KIN
+              </ThemedText>
             </View>
             <View style={styles.menuContainer}>
               <DropdownMenu currentRoute="explore" />
