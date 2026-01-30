@@ -121,8 +121,8 @@ export default function CommunityScreen() {
               >
                 Community Stories
               </ThemedText>
-              <ThemedText style={[styles.headerSubtitle, { color: theme.textDim }]}>
-                Voices from the Ukho network
+              <ThemedText style={[styles.headerSubtitle, { color: BrandColors.orange500 }]}>
+                VOICES FROM THE UKHO NETWORK
               </ThemedText>
             </View>
           </View>

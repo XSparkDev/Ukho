@@ -11,6 +11,7 @@ export const Colors = {
     textDim: '#64748b',
     borderColor: 'rgba(0, 0, 0, 0.08)',
     cardShadow: 'rgba(0, 0, 0, 0.05)',
+    icon: '#64748b',
   },
   dark: {
     bgColor: '#120b08',
@@ -19,6 +20,7 @@ export const Colors = {
     textDim: '#94a3b8',
     borderColor: 'rgba(245, 158, 11, 0.15)',
     cardShadow: 'rgba(0, 0, 0, 0.5)',
+    icon: '#94a3b8',
   },
 };
 

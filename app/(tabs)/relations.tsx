@@ -1,12 +1,13 @@
-import React, { useMemo } from 'react';
-import { FlatList, Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useMemo, useState } from 'react';
+import { FlatList, Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ScreenContainer } from '@/components/ScreenContainer';
 import { ThemedText } from '@/components/themed-text';
-import { useTheme } from '@/constants/Theme';
 import { BrandColors } from '@/constants/Colors';
 import { BorderRadius, Spacing, Typography } from '@/constants/Styles';
+import { useTheme } from '@/constants/Theme';
 
 type Person = {
   id: string;
@@ -20,8 +21,10 @@ type Chat = {
   name: string;
   avatar: string;
   lastMessage: string;
-  timestamp: string; // relative (e.g., 2m, 1h)
+  timestamp: string;
   unread: boolean;
+  online: boolean;
+  lastSeen?: string;
 };
 
 const PEOPLE_YOU_KNOW: Person[] = [
@@ -64,6 +67,7 @@ const CHATS: Chat[] = [
     lastMessage: 'Unity is our strength. ✊🏾🇿🇦',
     timestamp: '2m',
     unread: true,
+    online: true,
   },
   {
     id: 'c2',
@@ -73,6 +77,8 @@ const CHATS: Chat[] = [
     lastMessage: 'Looking for Khumalo contacts in Joburg...',
     timestamp: '1h',
     unread: false,
+    online: false,
+    lastSeen: '2h ago',
   },
   {
     id: 'c3',
@@ -82,13 +88,29 @@ const CHATS: Chat[] = [
     lastMessage: 'Let’s set up a call to discuss clan records.',
     timestamp: '4h',
     unread: false,
+    online: true,
   },
 ];
 
 export default function RelationsScreen() {
   const { theme } = useTheme();
+  const router = useRouter();
+  const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
+  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
 
   const sortedChats = useMemo(() => CHATS, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const onlineChats = sortedChats.filter((c) => c.online);
+      if (onlineChats.length > 0 && Math.random() > 0.7) {
+        const random = onlineChats[Math.floor(Math.random() * onlineChats.length)];
+        setTypingUsers(new Set([random.id]));
+        setTimeout(() => setTypingUsers(new Set()), 3000);
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [sortedChats]);
 
   const renderPerson = ({ item }: { item: Person }) => (
     <View
@@ -107,53 +129,73 @@ export default function RelationsScreen() {
     </View>
   );
 
-  const renderChat = ({ item }: { item: Chat }) => (
-    <Pressable
-      style={[
-        styles.chatRow,
-        { backgroundColor: theme.panelBg, borderColor: theme.borderColor },
-      ]}
-      onPress={() => {
-        // keep existing messaging/nav logic intact; placeholder action
-        console.log('Open chat:', item.id);
-      }}
-    >
-      <View style={styles.chatAvatarWrapper}>
-        <Image source={{ uri: item.avatar }} style={styles.chatAvatar} />
-      </View>
-      <View style={styles.chatMeta}>
-        <View style={styles.chatHeader}>
-          <ThemedText
-            style={[
-              styles.chatName,
-              {
-                color: theme.textMain,
-                fontWeight: item.unread ? '800' : '700',
-              },
-            ]}
-            numberOfLines={1}
-          >
-            {item.name}
-          </ThemedText>
-          <ThemedText style={[styles.chatTimestamp, { color: theme.textDim }]}>
-            {item.timestamp}
-          </ThemedText>
+  const renderChat = ({ item }: { item: Chat }) => {
+    const isTyping = typingUsers.has(item.id);
+    return (
+      <Pressable
+        style={[
+          styles.chatRow,
+          { backgroundColor: theme.panelBg, borderColor: theme.borderColor },
+        ]}
+        onPress={() => {
+          setSelectedChatId(item.id);
+          console.log('Open chat:', item.id);
+        }}
+      >
+        <View style={styles.chatAvatarWrapper}>
+          <Image source={{ uri: item.avatar }} style={styles.chatAvatar} />
+          {item.online && <View style={styles.chatOnlineDot} />}
         </View>
-        <ThemedText
-          style={[
-            styles.chatPreview,
-            {
-              color: theme.textDim,
-              fontWeight: item.unread ? '700' : '500',
-            },
-          ]}
-          numberOfLines={1}
-        >
-          {item.lastMessage}
-        </ThemedText>
-      </View>
-    </Pressable>
-  );
+        <View style={styles.chatMeta}>
+          <View style={styles.chatHeader}>
+            <View style={styles.chatNameRow}>
+              <ThemedText
+                style={[
+                  styles.chatName,
+                  {
+                    color: theme.textMain,
+                    fontWeight: item.unread ? '800' : '700',
+                  },
+                ]}
+                numberOfLines={1}
+              >
+                {item.name}
+              </ThemedText>
+              {!item.online && item.lastSeen && (
+                <ThemedText style={[styles.lastSeen, { color: theme.textDim }]}>
+                  • Last seen {item.lastSeen}
+                </ThemedText>
+              )}
+            </View>
+            <ThemedText style={[styles.chatTimestamp, { color: theme.textDim }]}>
+              {item.timestamp}
+            </ThemedText>
+          </View>
+          {isTyping ? (
+            <ThemedText
+              style={[styles.typingIndicator, { color: BrandColors.orange500 }]}
+              numberOfLines={1}
+            >
+              {item.name} is typing...
+            </ThemedText>
+          ) : (
+            <ThemedText
+              style={[
+                styles.chatPreview,
+                {
+                  color: theme.textDim,
+                  fontWeight: item.unread ? '700' : '500',
+                },
+              ]}
+              numberOfLines={1}
+            >
+              {item.lastMessage}
+            </ThemedText>
+          )}
+        </View>
+      </Pressable>
+    );
+  };
 
   return (
     <ScreenContainer>
@@ -163,27 +205,28 @@ export default function RelationsScreen() {
       >
         {/* Header with Requests */}
         <View style={styles.headerRow}>
-          <View>
-            <ThemedText
-              style={[
-                styles.title,
-                { color: theme.textMain, fontFamily: Typography.spaceGrotesk },
-              ]}
-            >
-              CONNECT
-            </ThemedText>
-            <ThemedText style={[styles.subtitle, { color: theme.textDim }]}>
-              Messaging and outreach hub
-            </ThemedText>
+          <View style={styles.headerLeft}>
+            <Feather name="message-circle" size={20} color={BrandColors.orange500} />
+            <View>
+              <ThemedText
+                style={[
+                  styles.title,
+                  { color: theme.textMain, fontFamily: Typography.spaceGrotesk },
+                ]}
+              >
+                CONNECT
+              </ThemedText>
+              <ThemedText style={[styles.subtitle, { color: BrandColors.orange500 }]}>
+                MESSAGING AND OUTREACH HUB
+              </ThemedText>
+            </View>
           </View>
           <Pressable
             style={[
               styles.requestsButton,
               { borderColor: theme.borderColor, backgroundColor: theme.panelBg },
             ]}
-            onPress={() => {
-              console.log('Open requests');
-            }}
+            onPress={() => router.push('/requests')}
           >
             <Feather name="inbox" size={16} color={theme.textMain} />
             <ThemedText style={[styles.requestsText, { color: theme.textMain }]}>
@@ -223,6 +266,19 @@ export default function RelationsScreen() {
           />
         </View>
       </ScrollView>
+
+      {selectedChatId && typingUsers.has(selectedChatId) && (
+        <View
+          style={[
+            styles.typingBanner,
+            { backgroundColor: theme.panelBg, borderColor: theme.borderColor },
+          ]}
+        >
+          <ThemedText style={[styles.typingBannerText, { color: BrandColors.orange500 }]}>
+            {sortedChats.find((c) => c.id === selectedChatId)?.name} is typing...
+          </ThemedText>
+        </View>
+      )}
     </ScreenContainer>
   );
 }
@@ -238,6 +294,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[2],
+    flex: 1,
+  },
   title: {
     fontSize: 22,
     fontWeight: '900',
@@ -247,6 +309,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing[1],
     fontSize: 12,
     fontWeight: '600',
+    textTransform: 'uppercase',
   },
   requestsButton: {
     flexDirection: 'row',
@@ -333,11 +396,23 @@ const styles = StyleSheet.create({
     height: 52,
     borderRadius: BorderRadius.xl,
     overflow: 'hidden',
+    position: 'relative',
   },
   chatAvatar: {
     width: '100%',
     height: '100%',
     borderRadius: BorderRadius.xl,
+  },
+  chatOnlineDot: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: BrandColors.orange500,
+    borderWidth: 2,
+    borderColor: '#fff',
   },
   chatMeta: {
     flex: 1,
@@ -348,6 +423,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  chatNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[1],
+    flex: 1,
+  },
   chatName: {
     fontSize: 16,
   },
@@ -357,6 +438,36 @@ const styles = StyleSheet.create({
   },
   chatPreview: {
     fontSize: Typography.fontSize.sm,
+  },
+  lastSeen: {
+    fontSize: Typography.fontSize.xs,
+    fontWeight: '500',
+    fontStyle: 'italic',
+  },
+  typingIndicator: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: '600',
+    fontStyle: 'italic',
+  },
+  typingBanner: {
+    position: 'absolute',
+    bottom: Spacing[4],
+    left: Spacing[4],
+    right: Spacing[4],
+    paddingVertical: Spacing[3],
+    paddingHorizontal: Spacing[4],
+    borderRadius: BorderRadius.xl,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  typingBannerText: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: '600',
+    fontStyle: 'italic',
+    textAlign: 'center',
   },
 });
 

@@ -3,8 +3,8 @@
  * Matches web application styling exactly
  */
 
-import { StyleSheet, Platform } from 'react-native';
-import { Colors, BrandColors, UkhoGlow } from './Colors';
+import { Platform, StyleSheet } from 'react-native';
+import { Colors, UkhoGlow } from './Colors';
 
 // Border Radius Values (matching Tailwind classes)
 export const BorderRadius = {
@@ -98,6 +98,16 @@ export const Shadows = {
     shadowOpacity: 0.1,
     shadowRadius: 30,
     elevation: 10, // Android
+  },
+};
+
+// Card base styles (borderRadius, padding, border, shadow); theme colors applied at use site
+export const CardStyles = {
+  base: {
+    borderRadius: BorderRadius['2xl'],
+    padding: Spacing[4],
+    borderWidth: 1,
+    ...Shadows.card,
   },
 };
 
