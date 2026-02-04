@@ -1,13 +1,16 @@
 import { Feather } from '@expo/vector-icons';
-import React from 'react';
-import { FlatList, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import React, { useMemo } from 'react';
+import { FlatList, Image, ScrollView, StyleSheet, View } from 'react-native';
 
+import { AnimatedButton } from '@/components/AnimatedButton';
 import { DropdownMenu } from '@/components/DropdownMenu';
 import { ScreenContainer } from '@/components/ScreenContainer';
 import { ThemedText } from '@/components/themed-text';
 import { BrandColors } from '@/constants/Colors';
 import { BorderRadius, Spacing, Typography } from '@/constants/Styles';
 import { useTheme } from '@/constants/Theme';
+import { useBlockedUsers } from '@/context/BlockedUsersContext';
 
 type CommunityPost = {
   id: string;
@@ -91,15 +94,26 @@ const PEOPLE_YOU_MAY_KNOW = [
 
 export default function CommunityScreen() {
   const { theme } = useTheme();
+  const router = useRouter();
+  const { addBlockedUser, isBlocked } = useBlockedUsers();
+
+  const filteredSuggestions = useMemo(
+    () => PEOPLE_YOU_MAY_KNOW.filter((s) => !isBlocked(s.id)),
+    [isBlocked]
+  );
+  const filteredPosts = useMemo(() => POSTS.filter((p) => !isBlocked(p.id)), [isBlocked]);
 
   const handleConnectKin = (postId: string) => {
-    // Placeholder for future connect logic
     console.log('Connect kin for post:', postId);
   };
 
   const handleConnectSuggestion = (id: string) => {
-    // Mirrors connect behaviour from Possible/Nearby Kin screens
     console.log('Connect suggestion:', id);
+  };
+
+  const handleBlock = (item: { id: string; name: string; avatar: string }) => {
+    addBlockedUser({ id: item.id, name: item.name, avatar: item.avatar, blockType: 'fully_blocked' });
+    router.push('/blocked');
   };
 
   return (
@@ -143,7 +157,7 @@ export default function CommunityScreen() {
           </View>
           <FlatList
             horizontal
-            data={PEOPLE_YOU_MAY_KNOW}
+            data={filteredSuggestions}
             keyExtractor={(item) => item.id}
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.suggestionsList}
@@ -170,14 +184,23 @@ export default function CommunityScreen() {
                 >
                   {item.hint}
                 </ThemedText>
-                <TouchableOpacity
-                  onPress={() => handleConnectSuggestion(item.id)}
-                  style={styles.suggestionConnectButton}
-                  activeOpacity={0.8}
-                >
-                  <Feather name="user-plus" size={14} color="#fff" />
-                  <ThemedText style={styles.suggestionConnectText}>CONNECT</ThemedText>
-                </TouchableOpacity>
+                <View style={styles.suggestionActions}>
+                  <AnimatedButton
+                    onPress={() => handleConnectSuggestion(item.id)}
+                    style={styles.suggestionConnectButton}
+                  >
+                    <View style={styles.suggestionConnectInner}>
+                      <Feather name="user-plus" size={14} color="#fff" />
+                      <ThemedText style={styles.suggestionConnectText}>CONNECT</ThemedText>
+                    </View>
+                  </AnimatedButton>
+                  <AnimatedButton
+                    style={[styles.blockIconBtn, { borderColor: theme.borderColor }]}
+                    onPress={() => handleBlock(item)}
+                  >
+                    <Feather name="user-x" size={12} color={theme.textDim} />
+                  </AnimatedButton>
+                </View>
               </View>
             )}
           />
@@ -185,7 +208,7 @@ export default function CommunityScreen() {
 
         {/* Posts */}
         <View style={styles.postList}>
-          {POSTS.map((post) => (
+          {filteredPosts.map((post) => (
             <View
               key={post.id}
               style={[
@@ -227,6 +250,12 @@ export default function CommunityScreen() {
                 <ThemedText style={[styles.timeAgo, { color: theme.textDim }]}>
                   {post.timeAgo}
                 </ThemedText>
+                <AnimatedButton
+                  style={[styles.blockIconBtn, { borderColor: theme.borderColor }]}
+                  onPress={() => handleBlock(post)}
+                >
+                  <Feather name="user-x" size={14} color={theme.textDim} />
+                </AnimatedButton>
               </View>
 
               {/* Content */}
@@ -265,14 +294,15 @@ export default function CommunityScreen() {
                   </View>
                 </View>
 
-                <TouchableOpacity
+                <AnimatedButton
                   onPress={() => handleConnectKin(post.id)}
                   style={styles.connectKinButton}
-                  activeOpacity={0.8}
                 >
-                  <Feather name="user-plus" size={16} color="#fff" />
-                  <ThemedText style={styles.connectKinText}>CONNECT KIN</ThemedText>
-                </TouchableOpacity>
+                  <View style={styles.connectKinButtonInner}>
+                    <Feather name="user-plus" size={16} color="#fff" />
+                    <ThemedText style={styles.connectKinText}>CONNECT KIN</ThemedText>
+                  </View>
+                </AnimatedButton>
               </View>
             </View>
           ))}
@@ -372,14 +402,27 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: Spacing[3],
   },
-  suggestionConnectButton: {
+  suggestionActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing[1],
+    gap: Spacing[2],
+    marginTop: Spacing[2],
+  },
+  suggestionConnectButton: {
     paddingVertical: Spacing[2],
     paddingHorizontal: Spacing[3],
     borderRadius: BorderRadius.xl,
     backgroundColor: BrandColors.orange500,
+  },
+  suggestionConnectInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[1],
+  },
+  blockIconBtn: {
+    padding: Spacing[1],
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
   },
   suggestionConnectText: {
     fontSize: Typography.fontSize.xs,
@@ -518,15 +561,19 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   connectKinButton: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing[2],
+    justifyContent: 'center',
     paddingVertical: Spacing[2],
     paddingHorizontal: Spacing[4],
     borderRadius: BorderRadius.xl,
     backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: 'rgba(148, 163, 184, 0.4)',
+  },
+  connectKinButtonInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[2],
   },
   connectKinText: {
     fontSize: Typography.fontSize.xs,

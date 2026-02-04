@@ -3,11 +3,13 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { FlatList, Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { AnimatedButton } from '@/components/AnimatedButton';
 import { ScreenContainer } from '@/components/ScreenContainer';
 import { ThemedText } from '@/components/themed-text';
 import { BrandColors } from '@/constants/Colors';
 import { BorderRadius, Spacing, Typography } from '@/constants/Styles';
 import { useTheme } from '@/constants/Theme';
+import { useBlockedUsers } from '@/context/BlockedUsersContext';
 
 type Person = {
   id: string;
@@ -95,10 +97,17 @@ const CHATS: Chat[] = [
 export default function RelationsScreen() {
   const { theme } = useTheme();
   const router = useRouter();
+  const { addBlockedUser, isBlocked } = useBlockedUsers();
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
 
-  const sortedChats = useMemo(() => CHATS, []);
+  const sortedChats = useMemo(() => CHATS.filter((c) => !isBlocked(c.id)), [isBlocked]);
+  const peopleYouKnow = useMemo(() => PEOPLE_YOU_KNOW.filter((p) => !isBlocked(p.id)), [isBlocked]);
+
+  const handleBlock = (item: { id: string; name: string; avatar: string }) => {
+    addBlockedUser({ id: item.id, name: item.name, avatar: item.avatar, blockType: 'fully_blocked' });
+    router.push('/blocked');
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -126,6 +135,12 @@ export default function RelationsScreen() {
       <ThemedText style={[styles.personName, { color: theme.textMain }]} numberOfLines={1}>
         {item.name}
       </ThemedText>
+      <AnimatedButton
+        style={[styles.blockIconBtn, { borderColor: theme.borderColor }]}
+        onPress={() => handleBlock(item)}
+      >
+        <Feather name="user-x" size={14} color={theme.textDim} />
+      </AnimatedButton>
     </View>
   );
 
@@ -193,6 +208,12 @@ export default function RelationsScreen() {
             </ThemedText>
           )}
         </View>
+        <AnimatedButton
+          style={[styles.blockIconBtn, { borderColor: theme.borderColor }]}
+          onPress={() => handleBlock(item)}
+        >
+          <Feather name="user-x" size={16} color={theme.textDim} />
+        </AnimatedButton>
       </Pressable>
     );
   };
@@ -221,18 +242,20 @@ export default function RelationsScreen() {
               </ThemedText>
             </View>
           </View>
-          <Pressable
+          <AnimatedButton
             style={[
               styles.requestsButton,
               { borderColor: theme.borderColor, backgroundColor: theme.panelBg },
             ]}
             onPress={() => router.push('/requests')}
           >
-            <Feather name="inbox" size={16} color={theme.textMain} />
-            <ThemedText style={[styles.requestsText, { color: theme.textMain }]}>
-              Requests
-            </ThemedText>
-          </Pressable>
+            <View style={styles.requestsButtonInner}>
+              <Feather name="inbox" size={16} color={theme.textMain} />
+              <ThemedText style={[styles.requestsText, { color: theme.textMain }]}>
+                Requests
+              </ThemedText>
+            </View>
+          </AnimatedButton>
         </View>
 
         {/* People You May Know / Active */}
@@ -244,7 +267,7 @@ export default function RelationsScreen() {
           </View>
           <FlatList
             horizontal
-            data={PEOPLE_YOU_KNOW}
+            data={peopleYouKnow}
             keyExtractor={(item) => item.id}
             renderItem={renderPerson}
             contentContainerStyle={styles.personList}
@@ -314,11 +337,17 @@ const styles = StyleSheet.create({
   requestsButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: Spacing[1],
     paddingVertical: Spacing[2],
     paddingHorizontal: Spacing[3],
     borderRadius: BorderRadius.xl,
     borderWidth: 1,
+  },
+  requestsButtonInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[1],
   },
   requestsText: {
     fontSize: Typography.fontSize.sm,
@@ -378,6 +407,11 @@ const styles = StyleSheet.create({
   personName: {
     fontSize: 12,
     fontWeight: '700',
+  },
+  blockIconBtn: {
+    padding: Spacing[1],
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
   },
   chatRow: {
     flexDirection: 'row',

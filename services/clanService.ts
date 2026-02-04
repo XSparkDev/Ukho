@@ -1,4 +1,15 @@
-const CLANS_URL = 'https://2110000e-d11b-4acc-803c-9d8d776b7411.mock.pstmn.io/Clans';
+import { db } from "@/app/firebase/config";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  setDoc,
+  updateDoc,
+  where,
+} from "firebase/firestore";
 
 export type Clan = {
   clan_id: string;
@@ -9,42 +20,73 @@ export type Clan = {
   region: string[];
   association: string[];
   lineage_type: string;
-  descendants: string[];
+  descendants: string[]; 
 };
 
-type ClansApiResponse = {
-  clans: Clan[];
-};
+const clansRef = collection(db, "clans");
 
-/**
- * Fetch all clans from the mock API.
- */
-export async function getAllClans(): Promise<Clan[]> {
-  const response = await fetch(CLANS_URL);
 
-  if (!response.ok) {
-    throw new Error('Failed to fetch clans. Please try again later.');
-  }
-
-  const data: ClansApiResponse | Clan[] = await response.json();
-
-  // API may return either { clans: [...] } or just [...]
-  if (Array.isArray(data)) {
-    return data;
-  }
-
-  return data.clans ?? [];
+// 🟢 CREATE
+export async function createClan(clan: Clan) {
+  const clanRef = doc(db, "clans", clan.clan_id);
+  await setDoc(clanRef, clan);
 }
 
-/**
- * Simple client-side search helper by clan name.
- * This can be wired into the Plaza "Clan Search" field.
- */
-export async function searchClansByName(query: string): Promise<Clan[]> {
-  const trimmed = query.trim().toLowerCase();
+
+// 🔵 READ ALL
+export async function getAllClans(): Promise<Clan[]> {
+  const snapshot = await getDocs(clansRef);
+
+  return snapshot.docs.map((doc) => ({
+    ...(doc.data() as Clan),
+    clan_id: doc.id,
+  }));
+}
+
+
+// 🔵 READ ONE
+export async function getClanById(clanId: string): Promise<Clan | null> {
+  const clanRef = doc(db, "clans", clanId);
+  const snap = await getDoc(clanRef);
+
+  if (!snap.exists()) return null;
+
+  return {
+    ...(snap.data() as Clan),
+    clan_id: snap.id,
+  };
+}
+
+
+// 🟡 UPDATE
+export async function updateClan(clanId: string, updates: Partial<Clan>) {
+  const clanRef = doc(db, "clans", clanId);
+  await updateDoc(clanRef, updates);
+}
+
+
+// 🔴 DELETE
+export async function deleteClan(clanId: string) {
+  const clanRef = doc(db, "clans", clanId);
+  await deleteDoc(clanRef);
+}
+
+
+// 🔍 SEARCH (by name)
+export async function searchClansByName(queryText: string): Promise<Clan[]> {
+  const trimmed = queryText.trim();
   if (!trimmed) return [];
 
-  const clans = await getAllClans();
-  return clans.filter((clan) => clan.name.toLowerCase().includes(trimmed));
-}
+  const q = query(
+    clansRef,
+    where("name", ">=", trimmed),
+    where("name", "<=", trimmed + "\uf8ff")
+  );
 
+  const snapshot = await getDocs(q);
+
+  return snapshot.docs.map((doc) => ({
+    ...(doc.data() as Clan),
+    clan_id: doc.id,
+  }));
+}

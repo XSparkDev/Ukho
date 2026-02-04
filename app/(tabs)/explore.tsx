@@ -1,13 +1,16 @@
 import { Feather } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Image, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
+import { AnimatedButton } from '@/components/AnimatedButton';
 import { DropdownMenu } from '@/components/DropdownMenu';
 import { ScreenContainer } from '@/components/ScreenContainer';
 import { ThemedText } from '@/components/themed-text';
 import { BrandColors } from '@/constants/Colors';
 import { BorderRadius, Spacing, Typography } from '@/constants/Styles';
 import { useTheme } from '@/constants/Theme';
+import { useBlockedUsers } from '@/context/BlockedUsersContext';
 
 type Elder = {
   id: string;
@@ -76,10 +79,9 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
 
   return (
     <View>
-      <TouchableOpacity
+      <AnimatedButton
         style={styles.sectionHeader}
         onPress={() => setExpanded((prev) => !prev)}
-        activeOpacity={0.8}
       >
         <View style={styles.sectionHeaderLeft}>
           {icon}
@@ -88,7 +90,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
         <Animated.View style={{ transform: [{ rotate: chevronRotation }] }}>
           <Feather name="chevron-right" size={16} color={chevronColor} />
         </Animated.View>
-      </TouchableOpacity>
+      </AnimatedButton>
 
       <Animated.View style={[{ overflow: 'hidden', opacity: animated }, heightStyle]}>
         <View onLayout={onLayoutContent}>{children}</View>
@@ -161,17 +163,27 @@ const POTENTIAL_KIN: Kin[] = [
 
 export default function ContactsScreen() {
   const { theme } = useTheme();
+  const router = useRouter();
+  const { addBlockedUser, isBlocked } = useBlockedUsers();
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredElders = useMemo(
     () =>
       VERIFIED_ELDERS.filter(
         (e) =>
-          e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          e.clan.toLowerCase().includes(searchQuery.toLowerCase()),
+          !isBlocked(e.id) &&
+          (e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            e.clan.toLowerCase().includes(searchQuery.toLowerCase())),
       ),
-    [searchQuery],
+    [searchQuery, isBlocked],
   );
+
+  const filteredKin = useMemo(() => POTENTIAL_KIN.filter((k) => !isBlocked(k.id)), [isBlocked]);
+
+  const handleBlock = (item: { id: string; name: string; avatar: string }) => {
+    addBlockedUser({ id: item.id, name: item.name, avatar: item.avatar, blockType: 'fully_blocked' });
+    router.push('/blocked');
+  };
 
   return (
     <ScreenContainer>
@@ -264,10 +276,28 @@ export default function ContactsScreen() {
                     <ThemedText style={styles.elderClan}>{elder.clan} Clan</ThemedText>
                     <ThemedText style={styles.elderRole}>{elder.role}</ThemedText>
                   </View>
-                  <View>
-                    <View style={styles.messageButton}>
+                  <View style={styles.elderActions}>
+                    <TouchableOpacity
+                      style={styles.messageButton}
+                      onPress={() =>
+                        router.push({
+                          pathname: '/chat',
+                          params: { id: elder.id, name: elder.name, avatar: elder.avatar },
+                        })
+                      }
+                      activeOpacity={0.7}
+                    >
                       <Feather name="message-circle" size={18} color="#f97316" />
-                    </View>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.addToContactsButton, { borderColor: theme.borderColor }]}
+                      onPress={() => {
+                        // TODO: add elder to contacts
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Feather name="user-plus" size={18} color={theme.textDim} />
+                    </TouchableOpacity>
                   </View>
                 </View>
               </View>
@@ -275,14 +305,17 @@ export default function ContactsScreen() {
           </View>
         </CollapsibleSection>
 
-        {/* Potential Kin (compact grid, collapsible) */}
+        {/* Potential Kin (compact grid, non-collapsible) */}
         {!searchQuery && (
-          <CollapsibleSection
-            label="POTENTIAL KIN"
-            icon={<Feather name="star" size={20} color="#f97316" />}
-            titleColor={theme.textMain}
-            chevronColor={theme.textDim}
-          >
+          <>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionHeaderLeft}>
+                <Feather name="star" size={20} color="#f97316" />
+                <ThemedText style={[styles.sectionTitle, { color: theme.textMain }]}>
+                  POTENTIAL KIN
+                </ThemedText>
+              </View>
+            </View>
             <View
               style={[
                 styles.potentialCard,
@@ -293,7 +326,7 @@ export default function ContactsScreen() {
               ]}
             >
               <View style={styles.kinGrid}>
-                {POTENTIAL_KIN.map((kin) => (
+                {filteredKin.map((kin) => (
                   <View key={kin.id} style={styles.kinCard}>
                     <Image source={{ uri: kin.avatar }} style={styles.kinAvatar} />
                     <ThemedText style={[styles.kinName, { color: theme.textMain }]}>
@@ -303,15 +336,17 @@ export default function ContactsScreen() {
                     <ThemedText style={styles.kinReason} numberOfLines={2}>
                       “{kin.matchReason}”
                     </ThemedText>
-                    <View style={styles.kinButton}>
-                      <Feather name="user-plus" size={14} color="#fff" />
-                      <ThemedText style={styles.kinButtonText}>SEND LINK</ThemedText>
+                    <View style={styles.kinRow}>
+                      <View style={styles.kinButton}>
+                        <Feather name="user-plus" size={14} color="#fff" />
+                        <ThemedText style={styles.kinButtonText}>SEND LINK</ThemedText>
+                      </View>
                     </View>
                   </View>
                 ))}
               </View>
             </View>
-          </CollapsibleSection>
+          </>
         )}
       </ScrollView>
     </ScreenContainer>
@@ -412,6 +447,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing[4],
   },
+  elderActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[2],
+  },
   elderAvatarWrapper: {
     position: 'relative',
   },
@@ -449,10 +489,20 @@ const styles = StyleSheet.create({
     color: '#64748b',
     marginTop: 2,
   },
+  blockIconBtn: {
+    padding: Spacing[1],
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+  },
   messageButton: {
     padding: Spacing[3],
     borderRadius: BorderRadius.xl,
     backgroundColor: 'rgba(249, 115, 22, 0.1)',
+  },
+  addToContactsButton: {
+    padding: Spacing[3],
+    borderRadius: BorderRadius.xl,
+    borderWidth: 1,
   },
   potentialCard: {
     borderRadius: BorderRadius['2.5rem'],
@@ -497,8 +547,13 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
   },
-  kinButton: {
+  kinRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[2],
     marginTop: Spacing[2],
+  },
+  kinButton: {
     borderRadius: BorderRadius.xl,
     paddingVertical: Spacing[2],
     paddingHorizontal: Spacing[3],

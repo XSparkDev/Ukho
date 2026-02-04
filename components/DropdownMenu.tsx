@@ -12,6 +12,7 @@ import {
     View,
 } from 'react-native';
 
+import { AnimatedButton } from '@/components/AnimatedButton';
 import { ThemedText } from '@/components/themed-text';
 import { BrandColors, UkhoGradient } from '@/constants/Colors';
 import { BorderRadius, Spacing, Typography } from '@/constants/Styles';
@@ -139,29 +140,15 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({ currentRoute = 'inde
   return (
     <>
       {/* Hamburger Menu Button */}
-      <TouchableOpacity
+      <AnimatedButton
         onPress={handleMenuToggle}
-        onPressIn={() => setIsButtonPressed(true)}
-        onPressOut={() => setIsButtonPressed(false)}
         style={[
           styles.menuButton,
-          {
-            backgroundColor: isButtonPressed
-              ? isLightMode
-                ? 'rgba(0,0,0,0.08)'
-                : 'rgba(255,255,255,0.15)'
-              : theme.panelBg,
-            borderColor: theme.borderColor,
-          },
+          { backgroundColor: theme.panelBg, borderColor: theme.borderColor },
         ]}
-        activeOpacity={0.7}
       >
-        <Feather
-          name="menu"
-          size={20}
-          color={theme.textMain}
-        />
-      </TouchableOpacity>
+        <Feather name="menu" size={20} color={theme.textMain} />
+      </AnimatedButton>
 
       {/* Dropdown Menu Modal */}
       <Modal
@@ -190,13 +177,12 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({ currentRoute = 'inde
             />
 
             {/* Close Button */}
-            <TouchableOpacity
+            <AnimatedButton
               onPress={handleMenuToggle}
               style={styles.closeButton}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <Feather name="x" size={24} color={theme.textMain} />
-            </TouchableOpacity>
+            </AnimatedButton>
 
             {/* Logo Section */}
             <View style={styles.logoSection}>
@@ -227,8 +213,6 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({ currentRoute = 'inde
                   <TouchableOpacity
                     key={item.id}
                     onPress={() => handleMenuItemPress(item)}
-                    onPressIn={() => setPressedItem(item.id)}
-                    onPressOut={() => setPressedItem(null)}
                     style={[
                       styles.menuItem,
                       active && {

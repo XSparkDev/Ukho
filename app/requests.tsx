@@ -1,21 +1,16 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React from 'react';
-import {
-    Image,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    TouchableOpacity,
-    View,
-} from 'react-native';
+import React, { useState } from 'react';
+import { Image, ScrollView, StyleSheet, View } from 'react-native';
 
+import { AnimatedButton } from '@/components/AnimatedButton';
 import { DropdownMenu } from '@/components/DropdownMenu';
 import { ScreenContainer } from '@/components/ScreenContainer';
 import { ThemedText } from '@/components/themed-text';
 import { BrandColors } from '@/constants/Colors';
 import { BorderRadius, Spacing, Typography } from '@/constants/Styles';
 import { useTheme } from '@/constants/Theme';
+import { useBlockedUsers } from '@/context/BlockedUsersContext';
 
 type RequestItem = {
   id: string;
@@ -58,18 +53,24 @@ const SENT_REQUESTS: RequestItem[] = [
 export default function RequestsScreen() {
   const { theme } = useTheme();
   const router = useRouter();
+  const { addBlockedUser } = useBlockedUsers();
+  const [connectRequests, setConnectRequests] = useState(CONNECT_REQUESTS);
+  const [sentRequests, setSentRequests] = useState(SENT_REQUESTS);
+
+  const handleBlock = (item: RequestItem) => {
+    addBlockedUser({ id: item.id, name: item.name, avatar: item.avatar, blockType: 'fully_blocked' });
+    setConnectRequests((prev) => prev.filter((r) => r.id !== item.id));
+    setSentRequests((prev) => prev.filter((r) => r.id !== item.id));
+    router.push('/blocked');
+  };
 
   return (
     <ScreenContainer>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.headerRow}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
-            activeOpacity={0.8}
-          >
+          <AnimatedButton onPress={() => router.back()} style={styles.backButton}>
             <Feather name="arrow-left" size={20} color={theme.textMain} />
-          </TouchableOpacity>
+          </AnimatedButton>
           <View style={styles.iconBadge}>
             <Feather name="inbox" size={18} color="#fff" />
           </View>
@@ -95,7 +96,7 @@ export default function RequestsScreen() {
           <ThemedText style={[styles.sectionTitle, { color: theme.textMain }]}>
             Connect Requests
           </ThemedText>
-          {CONNECT_REQUESTS.map((item) => (
+          {connectRequests.map((item) => (
             <View
               key={item.id}
               style={[
@@ -117,20 +118,26 @@ export default function RequestsScreen() {
                   </ThemedText>
                 </View>
                 <View style={styles.actions}>
-                  <Pressable
+                  <AnimatedButton
                     style={[styles.acceptBtn, { backgroundColor: BrandColors.orange500 }]}
                     onPress={() => console.log('Accept', item.id)}
                   >
                     <ThemedText style={styles.acceptBtnText}>Accept</ThemedText>
-                  </Pressable>
-                  <Pressable
+                  </AnimatedButton>
+                  <AnimatedButton
                     style={[styles.declineBtn, { borderColor: theme.borderColor }]}
                     onPress={() => console.log('Decline', item.id)}
                   >
                     <ThemedText style={[styles.declineBtnText, { color: theme.textMain }]}>
                       Decline
                     </ThemedText>
-                  </Pressable>
+                  </AnimatedButton>
+                  <AnimatedButton
+                    style={[styles.blockBtn, { borderColor: theme.borderColor }]}
+                    onPress={() => handleBlock(item)}
+                  >
+                    <Feather name="user-x" size={14} color={theme.textDim} />
+                  </AnimatedButton>
                 </View>
               </View>
             </View>
@@ -141,7 +148,7 @@ export default function RequestsScreen() {
           <ThemedText style={[styles.sectionTitle, { color: theme.textMain }]}>
             Sent Requests
           </ThemedText>
-          {SENT_REQUESTS.map((item) => (
+          {sentRequests.map((item) => (
             <View
               key={item.id}
               style={[
@@ -162,14 +169,22 @@ export default function RequestsScreen() {
                     {item.timestamp}
                   </ThemedText>
                 </View>
-                <Pressable
-                  style={[styles.cancelBtn, { borderColor: theme.borderColor }]}
-                  onPress={() => console.log('Cancel', item.id)}
-                >
-                  <ThemedText style={[styles.cancelBtnText, { color: theme.textDim }]}>
-                    Cancel
-                  </ThemedText>
-                </Pressable>
+                <View style={styles.sentActions}>
+                  <AnimatedButton
+                    style={[styles.cancelBtn, { borderColor: theme.borderColor }]}
+                    onPress={() => setSentRequests((prev) => prev.filter((r) => r.id !== item.id))}
+                  >
+                    <ThemedText style={[styles.cancelBtnText, { color: theme.textDim }]}>
+                      Cancel
+                    </ThemedText>
+                  </AnimatedButton>
+                  <AnimatedButton
+                    style={[styles.blockBtn, { borderColor: theme.borderColor }]}
+                    onPress={() => handleBlock(item)}
+                  >
+                    <Feather name="user-x" size={14} color={theme.textDim} />
+                  </AnimatedButton>
+                </View>
               </View>
             </View>
           ))}
@@ -277,6 +292,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   declineBtnText: { fontWeight: '600', fontSize: Typography.fontSize.sm },
+  blockBtn: {
+    paddingVertical: Spacing[2],
+    paddingHorizontal: Spacing[2],
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sentActions: { flexDirection: 'row', gap: Spacing[2] },
   cancelBtn: {
     paddingVertical: Spacing[2],
     paddingHorizontal: Spacing[3],

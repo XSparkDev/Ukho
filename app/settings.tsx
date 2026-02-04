@@ -3,36 +3,40 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
-import { DropdownMenu } from '@/components/DropdownMenu';
+import { AnimatedButton } from '@/components/AnimatedButton';
 import { ScreenContainer } from '@/components/ScreenContainer';
 import { ThemedText } from '@/components/themed-text';
 import { BrandColors } from '@/constants/Colors';
 import { BorderRadius, Spacing, Typography } from '@/constants/Styles';
 import { useTheme } from '@/constants/Theme';
 
+type SectionItem = {
+  id: string;
+  title: string;
+  icon: string;
+  route: string;
+  keywords: string;
+};
+
+const ALL_SECTIONS: SectionItem[] = [
+  { id: 'account', title: 'Account', icon: 'user', route: '/account', keywords: 'profile email password clan' },
+  { id: 'preferences', title: 'Preferences', icon: 'sliders', route: '/preferences', keywords: 'theme language region display' },
+  { id: 'notifications', title: 'Notifications', icon: 'bell', route: '/notifications', keywords: 'alerts messages reminders' },
+  { id: 'privacy', title: 'Privacy', icon: 'lock', route: '/privacy', keywords: 'visibility blocked contact' },
+  { id: 'about', title: 'About Ukho', icon: 'info', route: '/about', keywords: 'purpose version legal support' },
+];
+
 export default function SettingsScreen() {
   const { theme } = useTheme();
   const router = useRouter();
-
-  const sections: { id: string; title: string; icon: string; route: string }[] = [
-    { id: 'account', title: 'Account', icon: 'user', route: '/account' },
-    { id: 'preferences', title: 'Preferences', icon: 'sliders', route: '/preferences' },
-    { id: 'notifications', title: 'Notifications', icon: 'bell', route: '/notifications' },
-    { id: 'privacy', title: 'Privacy', icon: 'lock', route: '/privacy' },
-    { id: 'about', title: 'About Ukho', icon: 'info', route: '/about' },
-  ];
 
   return (
     <ScreenContainer>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.headerRow}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
-            activeOpacity={0.8}
-          >
+          <AnimatedButton onPress={() => router.back()} style={styles.backButton}>
             <Feather name="arrow-left" size={20} color={theme.textMain} />
-          </TouchableOpacity>
+          </AnimatedButton>
           <View style={styles.iconBadge}>
             <Feather name="settings" size={18} color="#fff" />
           </View>
@@ -47,36 +51,40 @@ export default function SettingsScreen() {
             </ThemedText>
             <ThemedText style={styles.subtitle}>MANAGE YOUR UKHO EXPERIENCE</ThemedText>
           </View>
-          <View style={styles.menuContainer}>
-            <DropdownMenu currentRoute="settings" />
-          </View>
+          <TouchableOpacity
+            onPress={() => router.push('/settings-search')}
+            style={styles.searchIconButton}
+            activeOpacity={0.7}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Feather name="search" size={22} color={theme.textMain} />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.sectionList}>
-          {sections.map((section) => (
-            <TouchableOpacity
+          {ALL_SECTIONS.map((section) => (
+            <AnimatedButton
               key={section.id}
-              activeOpacity={0.8}
               onPress={() => router.push(section.route)}
               style={[
-                styles.sectionCard,
-                { backgroundColor: theme.panelBg, borderColor: theme.borderColor },
-              ]}
-            >
-              <View style={styles.sectionHeader}>
-                <View style={styles.sectionIcon}>
-                  <Feather name={section.icon as any} size={16} color={BrandColors.orange500} />
-                </View>
-                <ThemedText style={[styles.sectionTitle, { color: theme.textMain }]}>
-                  {section.title}
-                </ThemedText>
-                <Feather name="chevron-right" size={18} color={theme.textDim} />
-              </View>
-              <ThemedText style={[styles.sectionHint, { color: theme.textDim }]}>
-                Tap to open {section.title.toLowerCase()} settings.
-              </ThemedText>
-            </TouchableOpacity>
-          ))}
+                    styles.sectionCard,
+                    { backgroundColor: theme.panelBg, borderColor: theme.borderColor },
+                  ]}
+                >
+                  <View style={styles.sectionHeader}>
+                    <View style={styles.sectionIcon}>
+                      <Feather name={section.icon as any} size={16} color={BrandColors.orange500} />
+                    </View>
+                    <ThemedText style={[styles.sectionTitle, { color: theme.textMain }]}>
+                      {section.title}
+                    </ThemedText>
+                    <Feather name="chevron-right" size={18} color={theme.textDim} />
+                  </View>
+                  <ThemedText style={[styles.sectionHint, { color: theme.textDim }]}>
+                    Tap to open {section.title.toLowerCase()} settings.
+                  </ThemedText>
+                </AnimatedButton>
+              ))}
         </View>
       </ScrollView>
     </ScreenContainer>
@@ -114,9 +122,13 @@ const styles = StyleSheet.create({
   },
   headerContent: {
     flex: 1,
+    minWidth: 0,
   },
-  menuContainer: {
-    marginLeft: 'auto',
+  searchIconButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     fontSize: 22,

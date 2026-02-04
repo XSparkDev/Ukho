@@ -1,4 +1,4 @@
-# React Native Mobile App Conversion Prompt for Ukho Network
+ # React Native Mobile App Conversion Prompt for Ukho Network
 
 ## Project Overview
 Convert the existing Ukho Network web application (React + Vite) into a native mobile application using React Native and Expo (the expo application is already created and running, continue from where we are). The application is a social network platform focused on connecting South African tribal communities, clans, and lineages. Every visual element, component, interaction, and styling must be replicated identically to the web version.
