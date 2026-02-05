@@ -4,8 +4,11 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import '@/app/firebase/config';
 import { ThemeProvider as UkhoThemeProvider, useTheme } from '@/constants/Theme';
 import { ROUTES } from '@/constants/routes';
+import { AuthProvider } from '@/context/AuthContext';
+import { BlockedUsersProvider } from '@/context/BlockedUsersContext';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -27,6 +30,9 @@ function RootStack() {
         <Stack.Screen name="notifications" options={{ headerShown: false }} />
         <Stack.Screen name="privacy" options={{ headerShown: false }} />
         <Stack.Screen name="about" options={{ headerShown: false }} />
+        <Stack.Screen name="settings-search" options={{ headerShown: false }} />
+        <Stack.Screen name="chat" options={{ headerShown: false }} />
+        <Stack.Screen name="blocked" options={{ headerShown: false }} />
         <Stack.Screen name={ROUTES.MODAL} options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>
       <StatusBar style={isLightMode ? 'dark' : 'light'} />
@@ -38,7 +44,11 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <UkhoThemeProvider>
-        <RootStack />
+        <AuthProvider>
+          <BlockedUsersProvider>
+            <RootStack />
+          </BlockedUsersProvider>
+        </AuthProvider>
       </UkhoThemeProvider>
     </SafeAreaProvider>
   );

@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
 
+import { AnimatedButton } from '@/components/AnimatedButton';
 import { DropdownMenu } from '@/components/DropdownMenu';
 import { ScreenContainer } from '@/components/ScreenContainer';
 import { ThemedText } from '@/components/themed-text';
@@ -11,10 +12,10 @@ import { BorderRadius, Spacing, Typography } from '@/constants/Styles';
 import { useTheme } from '@/constants/Theme';
 
 const NOTIFICATION_ITEMS = [
-  { id: 'messages', title: 'Messages', icon: 'message-circle', description: 'New chat and connection messages' },
-  { id: 'connect-requests', title: 'Connect Requests', icon: 'user-plus', description: 'When someone wants to connect' },
-  { id: 'clan-activity', title: 'Clan Activity', icon: 'users', description: 'Updates from your clan and elders' },
-  { id: 'event-reminders', title: 'Event Reminders', icon: 'calendar', description: 'Gatherings and ceremony reminders' },
+  { id: 'messages', title: 'Messages', icon: 'message-circle', description: 'New chat and connection messages', keywords: 'chat connection' },
+  { id: 'connect-requests', title: 'Connect Requests', icon: 'user-plus', description: 'When someone wants to connect', keywords: 'connect request' },
+  { id: 'clan-activity', title: 'Clan Activity', icon: 'users', description: 'Updates from your clan and elders', keywords: 'clan elders' },
+  { id: 'event-reminders', title: 'Event Reminders', icon: 'calendar', description: 'Gatherings and ceremony reminders', keywords: 'events ceremony' },
 ];
 
 export default function NotificationsScreen() {
@@ -35,9 +36,9 @@ export default function NotificationsScreen() {
     <ScreenContainer>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.headerRow}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton} activeOpacity={0.8}>
+          <AnimatedButton onPress={() => router.back()} style={styles.backButton}>
             <Feather name="arrow-left" size={20} color={theme.textMain} />
-          </TouchableOpacity>
+          </AnimatedButton>
           <View style={styles.iconBadge}>
             <Feather name="bell" size={18} color="#fff" />
           </View>
@@ -49,6 +50,14 @@ export default function NotificationsScreen() {
               MANAGE ALERTS AND UPDATES
             </ThemedText>
           </View>
+          <TouchableOpacity
+            onPress={() => router.push('/settings-search')}
+            style={styles.searchIconButton}
+            activeOpacity={0.7}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Feather name="search" size={22} color={theme.textMain} />
+          </TouchableOpacity>
           <View style={styles.menuContainer}>
             <DropdownMenu currentRoute="notifications" />
           </View>
@@ -119,7 +128,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerContent: { flex: 1 },
+  headerContent: { flex: 1, minWidth: 0 },
+  searchIconButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   menuContainer: { marginLeft: Spacing[2] },
   title: { fontSize: 22, fontWeight: '900' },
   subtitle: {

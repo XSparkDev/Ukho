@@ -4,13 +4,11 @@ export const ROUTES = {
   MODAL: 'modal',
 } as const;
 
-// API endpoints for network services
+// App uses Firebase (Auth, Firestore) for clans, profiles, and user data.
+// Use clanService, profileService, and authService instead of direct API URLs.
 export const API_ROUTES = {
   CLANS: {
-    GET_ALL: 'https://2110000e-d11b-4acc-803c-9d8d776b7411.mock.pstmn.io/Clans',
-  },
-  PROFILES: {
-    BASE: 'https://f9c8f88d-19c7-44f5-9dad-77447928d1e0.mock.pstmn.io',
+    GET_ALL: '/api/clans',
   },
 } as const;
 

@@ -70,6 +70,14 @@ export default function PreferencesScreen() {
               Tune how Ukho feels
             </ThemedText>
           </View>
+          <TouchableOpacity
+            onPress={() => router.push('/settings-search')}
+            style={styles.searchIconButton}
+            activeOpacity={0.7}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Feather name="search" size={22} color={theme.textMain} />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.optionsList}>
@@ -170,7 +178,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerContent: { flex: 1 },
+  headerContent: { flex: 1, minWidth: 0 },
+  searchIconButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   title: { fontSize: 22, fontWeight: '900' },
   subtitle: { fontSize: 14, fontWeight: '600' },
   optionsList: { gap: Spacing[4] },

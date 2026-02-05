@@ -61,6 +61,7 @@ export default function PlazaScreen() {
         <View
           style={[
             styles.glassCard,
+            styles.essentialCardBorder,
             {
               backgroundColor: theme.panelBg,
               borderColor: theme.borderColor,
@@ -129,14 +130,13 @@ export default function PlazaScreen() {
         <View
           style={[
             styles.glassCard,
-            styles.wisdomCard,
+            styles.essentialCardBorder,
             {
               backgroundColor: theme.panelBg,
               borderColor: theme.borderColor,
             },
           ]}
         >
-          <View style={styles.wisdomTopBar} />
           <View style={styles.wisdomHeaderRow}>
             <Feather name="shield" size={18} color="#f97316" />
             <ThemedText style={styles.wisdomLabel}>ANCESTRAL WISDOM</ThemedText>
@@ -203,20 +203,9 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 10 },
   },
-  wisdomCard: {
+  essentialCardBorder: {
     borderBottomWidth: 4,
     borderBottomColor: '#f97316',
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  wisdomTopBar: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 4,
-    backgroundColor: '#f97316',
-    opacity: 0.3,
   },
   wisdomHeaderRow: {
     flexDirection: 'row',

@@ -1,13 +1,13 @@
-import React from 'react';
-import { Image, ScrollView, StyleSheet, View, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import React from 'react';
+import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
+import { DropdownMenu } from '@/components/DropdownMenu';
 import { ScreenContainer } from '@/components/ScreenContainer';
 import { ThemedText } from '@/components/themed-text';
-import { DropdownMenu } from '@/components/DropdownMenu';
-import { useTheme } from '@/constants/Theme';
 import { BrandColors } from '@/constants/Colors';
 import { BorderRadius, Spacing, Typography } from '@/constants/Styles';
+import { useTheme } from '@/constants/Theme';
 
 type PossibleKin = {
   id: string;

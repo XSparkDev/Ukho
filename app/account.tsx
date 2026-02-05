@@ -3,19 +3,17 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
+import { AnimatedButton } from '@/components/AnimatedButton';
 import { AnimatedCard } from '@/components/AnimatedCard';
 import { ScreenContainer } from '@/components/ScreenContainer';
 import { ThemedText } from '@/components/themed-text';
 import { BrandColors } from '@/constants/Colors';
+import { ROUTES } from '@/constants/routes';
 import { BorderRadius, CardStyles, Spacing, Typography } from '@/constants/Styles';
 import { useTheme } from '@/constants/Theme';
+import { useAuth } from '@/context/AuthContext';
 
-export default function AccountScreen() {
-  const { theme } = useTheme();
-  const router = useRouter();
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-
-  const accountOptions = [
+const ACCOUNT_OPTIONS = [
     {
       id: 'edit-profile',
       title: 'Edit profile',
@@ -47,34 +45,42 @@ export default function AccountScreen() {
       id: 'manage-clan',
       title: 'Manage clan affiliation',
       icon: 'users',
+      description: 'Link your profile to clans',
+      keywords: 'clan affiliation lineage',
       onPress: () => {
         console.log('Navigate to Manage Clan Affiliations');
       },
     },
-  ];
+  ].map((o) => ({ ...o, keywords: (o as { keywords?: string }).keywords ?? o.title }));
 
-  const handleDeleteAccount = () => {
-    // Placeholder for delete account logic
-    console.log('Delete account confirmed');
-    // In a real app, this would:
-    // - Call API to delete account
-    // - Clear all user data
-    // - Navigate to auth screen
+function useAccountHandlers(router: ReturnType<typeof useRouter>) {
+  const { signOut } = useAuth();
+  const handleSignOut = async () => {
+    await signOut();
+    router.replace(ROUTES.AUTH as any);
+  };
+  return { handleSignOut };
+}
+
+export default function AccountScreen() {
+  const { theme } = useTheme();
+  const router = useRouter();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const { handleSignOut } = useAccountHandlers(router);
+
+  const handleDeleteAccount = async () => {
     setShowDeleteModal(false);
-    // router.replace('/auth');
+    // TODO: Call Firebase to delete user + Firestore data, then sign out
+    await handleSignOut();
   };
 
   return (
     <ScreenContainer>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.headerRow}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
-            activeOpacity={0.8}
-          >
+          <AnimatedButton onPress={() => router.back()} style={styles.backButton}>
             <Feather name="arrow-left" size={20} color={theme.textMain} />
-          </TouchableOpacity>
+          </AnimatedButton>
           <View style={styles.iconBadge}>
             <Feather name="user" size={18} color="#fff" />
           </View>
@@ -91,10 +97,18 @@ export default function AccountScreen() {
               Manage your account settings
             </ThemedText>
           </View>
+          <TouchableOpacity
+            onPress={() => router.push('/settings-search')}
+            style={styles.searchIconButton}
+            activeOpacity={0.7}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Feather name="search" size={22} color={theme.textMain} />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.optionsList}>
-          {accountOptions.map((option) => {
+          {ACCOUNT_OPTIONS.map((option) => {
             const isDeleteAccount = option.id === 'delete-account';
             return (
               <AnimatedCard
@@ -139,6 +153,31 @@ export default function AccountScreen() {
               </AnimatedCard>
             );
           })}
+          <AnimatedCard
+            onPress={handleSignOut}
+            style={[
+              CardStyles.base,
+              {
+                backgroundColor: theme.panelBg,
+                borderColor: theme.borderColor,
+              },
+            ]}
+          >
+            <View style={styles.optionHeader}>
+              <View style={[styles.optionIcon, { backgroundColor: 'rgba(249, 115, 22, 0.1)' }]}>
+                <Feather name="log-out" size={20} color={BrandColors.orange500} />
+              </View>
+              <View style={styles.optionContent}>
+                <ThemedText style={[styles.optionTitle, { color: theme.textMain }]}>
+                  Sign out
+                </ThemedText>
+                <ThemedText style={[styles.optionDescription, { color: theme.textDim }]}>
+                  Sign out of your account on this device
+                </ThemedText>
+              </View>
+              <Feather name="chevron-right" size={18} color={theme.textDim} />
+            </View>
+          </AnimatedCard>
         </View>
       </ScrollView>
 
@@ -173,7 +212,7 @@ export default function AccountScreen() {
             </View>
 
             <View style={styles.modalActions}>
-              <TouchableOpacity
+              <AnimatedButton
                 onPress={() => setShowDeleteModal(false)}
                 style={[
                   styles.modalButton,
@@ -183,19 +222,17 @@ export default function AccountScreen() {
                     borderColor: theme.borderColor,
                   },
                 ]}
-                activeOpacity={0.8}
               >
                 <ThemedText style={[styles.modalButtonText, { color: theme.textMain }]}>
                   Cancel
                 </ThemedText>
-              </TouchableOpacity>
-              <TouchableOpacity
+              </AnimatedButton>
+              <AnimatedButton
                 onPress={handleDeleteAccount}
                 style={[styles.modalButton, styles.modalButtonDelete]}
-                activeOpacity={0.8}
               >
                 <ThemedText style={styles.modalButtonTextDelete}>Delete Account</ThemedText>
-              </TouchableOpacity>
+              </AnimatedButton>
             </View>
           </View>
         </View>
@@ -235,6 +272,13 @@ const styles = StyleSheet.create({
   },
   headerContent: {
     flex: 1,
+    minWidth: 0,
+  },
+  searchIconButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     fontSize: 22,

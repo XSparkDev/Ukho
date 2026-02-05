@@ -1,31 +1,34 @@
+import { Feather } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    TextInput,
+    View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Feather } from '@expo/vector-icons';
 
-import { ThemedText } from '@/components/themed-text';
-import { ScreenContainer } from '@/components/ScreenContainer';
-import { useTheme } from '@/constants/Theme';
-import { UkhoGradient } from '@/constants/Colors';
-import { BorderRadius, Spacing, Typography } from '@/constants/Styles';
-import { LinearGradient } from 'expo-linear-gradient';
-import { login, register } from '../services/authService';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { ScreenContainer } from '@/components/ScreenContainer';
+import { ThemedText } from '@/components/themed-text';
 import { Toast } from '@/components/Toast';
+import { UkhoGradient } from '@/constants/Colors';
 import { ROUTES } from '@/constants/routes';
+import { BorderRadius, Spacing, Typography } from '@/constants/Styles';
+import { useTheme } from '@/constants/Theme';
+import { useAuth } from '@/context/AuthContext';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useEffect } from 'react';
+import { login, register } from '../services/authService';
 
 type AuthMode = 'login' | 'register';
 
 export default function AuthScreen() {
   const router = useRouter();
   const { isLightMode, theme } = useTheme();
+  const { user: authUser, isLoading: authLoading } = useAuth();
   const [mode, setMode] = useState<AuthMode>('login');
   const [cellNumber, setCellNumber] = useState('');
   const [password, setPassword] = useState('');
@@ -37,6 +40,11 @@ export default function AuthScreen() {
   );
 
   const isRegister = mode === 'register';
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (authUser) router.replace(ROUTES.TABS_ROOT);
+  }, [authLoading, authUser, router]);
 
   const getToastColor = (code?: string | null) => {
     switch (code) {
@@ -79,6 +87,15 @@ export default function AuthScreen() {
       setIsSubmitting(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <ScreenContainer style={styles.root}>
+        <View style={styles.flex} />
+        <LoadingSpinner size="large" color="#f97316" />
+      </ScreenContainer>
+    );
+  }
 
   return (
     <ScreenContainer style={styles.root}>

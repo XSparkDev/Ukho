@@ -3,7 +3,7 @@
  * Manages light/dark theme state and provides theme values to components
  */
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { useColorScheme as useSystemColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, BrandColors } from './Colors';
@@ -27,8 +27,9 @@ interface ThemeProviderProps {
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const systemColorScheme = useSystemColorScheme();
+  // Start with default theme to prevent null render - will update when storage loads
   const [isLightMode, setIsLightMode] = useState<boolean>(true);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const hasLoadedRef = useRef<boolean>(false);
 
   // Load saved theme preference on mount
   useEffect(() => {
@@ -37,29 +38,26 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         const savedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
         if (savedTheme) {
           setIsLightMode(savedTheme === 'light');
-        } else {
-          // Default to light mode (as per web app)
-          setIsLightMode(true);
         }
+        // If no saved theme, keep default (light mode)
       } catch (error) {
         console.error('Error loading theme:', error);
-        setIsLightMode(true);
       } finally {
-        setIsLoading(false);
+        hasLoadedRef.current = true;
       }
     };
 
     loadTheme();
   }, []);
 
-  // Save theme preference when it changes
+  // Save theme preference when it changes (but not during initial load)
   useEffect(() => {
-    if (!isLoading) {
+    if (hasLoadedRef.current) {
       AsyncStorage.setItem(THEME_STORAGE_KEY, isLightMode ? 'light' : 'dark').catch(
         (error) => console.error('Error saving theme:', error)
       );
     }
-  }, [isLightMode, isLoading]);
+  }, [isLightMode]);
 
   const toggleTheme = () => {
     setIsLightMode((prev) => !prev);
@@ -78,11 +76,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     setTheme,
   };
 
-  // Don't render children until theme is loaded
-  if (isLoading) {
-    return null;
-  }
-
+  // Always render provider, but use default theme while loading
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };
 

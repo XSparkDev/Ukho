@@ -1,5 +1,12 @@
-const BASE_URL = 'https://e8239c65-60c9-4f94-ae85-8b2a101125da.mock.pstmn.io';
-const LOGIN_URL = 'https://5589541a-021c-47f7-a814-cd4ae5b9b7bb.mock.pstmn.io/login';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  type User,
+} from "firebase/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+
+import { auth, db } from "@/app/firebase/config";
 
 export type LoginPayload = {
   cellNumber: string;
@@ -18,127 +25,132 @@ export type AuthUser = {
   cellNumber: string;
 };
 
-// In a real app, these would call your backend.
-// For now they just simulate a network request + basic validation.
+const usersRef = () => db;
+const userDoc = (uid: string) => doc(usersRef(), "users", uid);
+const usersByCellRef = (cell: string) =>
+  doc(usersRef(), "usersByCell", cell.trim().toLowerCase());
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+function buildAuthUser(uid: string, data: Record<string, unknown>): AuthUser {
+  return {
+    id: uid,
+    fullName: (data.fullName as string) ?? "",
+    email: (data.email as string) ?? "",
+    cellNumber: (data.cellNumber as string) ?? "",
+  };
+}
+
+/** Get current Firebase Auth user (null if not signed in). */
+export function getFirebaseUser(): User | null {
+  return auth.currentUser;
+}
+
+/** Get current app user profile from Firestore (null if not signed in or no profile). */
+export async function getCurrentUser(): Promise<AuthUser | null> {
+  const fb = auth.currentUser;
+  if (!fb) return null;
+  const snap = await getDoc(userDoc(fb.uid));
+  if (!snap.exists()) return null;
+  return buildAuthUser(snap.id, snap.data() as Record<string, unknown>);
+}
 
 export async function register(payload: RegisterPayload): Promise<AuthUser> {
   const { cellNumber, password, fullName, email } = payload;
 
   if (!fullName.trim() || !cellNumber.trim() || !password.trim() || !email.trim()) {
-    throw new Error('All fields are required.');
+    throw new Error("All fields are required.");
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
-    throw new Error('Please enter a valid email address.');
+    throw new Error("Please enter a valid email address.");
   }
 
-  // Call mock server register endpoint
-  const response = await fetch(`${BASE_URL}/register`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      fullName,
-      email,
-      cellNumber,
-      password,
-    }),
-  });
+  const credential = await createUserWithEmailAndPassword(auth, email.trim(), password);
 
-  if (!response.ok) {
-    // Try to extract error message from mock server, otherwise throw generic
-    try {
-      const errorBody = await response.json();
-      const message =
-        (errorBody && (errorBody.message || errorBody.error || errorBody.errorMessage)) ||
-        'Registration failed. Please try again.';
-      const err: any = new Error(message);
-      if (errorBody && typeof errorBody.errorCode === 'string') {
-        err.code = errorBody.errorCode;
-      }
-      throw err;
-    } catch {
-      throw new Error('Registration failed. Please try again.');
-    }
-  }
-
-  // Try to map the mock server response into our AuthUser type.
-  // Falls back to using the payload if the shape is different.
-  let parsed: any = null;
-  try {
-    parsed = await response.json();
-  } catch {
-    parsed = null;
-  }
-
-  const userFromResponse =
-    parsed?.user || parsed?.data || parsed?.result || parsed;
-
-  return {
-    id: userFromResponse?.id ?? 'mock-user-id',
-    fullName: userFromResponse?.fullName ?? fullName,
-    email: userFromResponse?.email ?? email,
-    cellNumber: userFromResponse?.cellNumber ?? cellNumber,
+  const uid = credential.user.uid;
+  const userData = {
+    fullName: fullName.trim(),
+    email: email.trim(),
+    cellNumber: cellNumber.trim(),
   };
+
+  await setDoc(userDoc(uid), userData);
+  const cellKey = cellNumber.trim().toLowerCase();
+  if (cellKey) {
+    await setDoc(usersByCellRef(cellNumber), { uid });
+  }
+
+  return buildAuthUser(uid, userData);
 }
 
+/** Login: first field can be email or cell number; second is password. */
 export async function login(payload: LoginPayload): Promise<AuthUser> {
   const { cellNumber, password } = payload;
 
   if (!cellNumber.trim() || !password.trim()) {
-    throw new Error('Cell number and password are required.');
+    throw new Error("Cell number (or email) and password are required.");
   }
 
-  // Call mock server login endpoint
-  const response = await fetch(LOGIN_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      cellNumber,
-      password,
-    }),
-  });
+  const input = cellNumber.trim();
+  const isEmail = input.includes("@");
 
-  if (!response.ok) {
-    // Try to extract error message from mock server, otherwise throw generic
-    try {
-      const errorBody = await response.json();
-      const message =
-        (errorBody && (errorBody.message || errorBody.error || errorBody.errorMessage)) ||
-        'Login failed. Please check your credentials and try again.';
-      const err: any = new Error(message);
-      if (errorBody && typeof errorBody.errorCode === 'string') {
-        err.code = errorBody.errorCode;
-      }
+  let emailToUse: string;
+
+  if (isEmail) {
+    emailToUse = input;
+  } else {
+    const byCellSnap = await getDoc(usersByCellRef(input));
+    if (!byCellSnap.exists()) {
+      const err: Error & { code?: string } = new Error(
+        "No account found for this cell number. Try signing in with your email."
+      );
+      err.code = "INVALID_CREDENTIALS";
       throw err;
-    } catch {
-      throw new Error('Login failed. Please check your credentials and try again.');
     }
+    const uid = (byCellSnap.data() as { uid?: string }).uid;
+    if (!uid) {
+      const err: Error & { code?: string } = new Error("Invalid account data.");
+      err.code = "INVALID_CREDENTIALS";
+      throw err;
+    }
+    const userSnap = await getDoc(userDoc(uid));
+    if (!userSnap.exists()) {
+      const err: Error & { code?: string } = new Error("Account not found.");
+      err.code = "INVALID_CREDENTIALS";
+      throw err;
+    }
+    const emailFromProfile = (userSnap.data() as { email?: string }).email;
+    if (!emailFromProfile) {
+      const err: Error & { code?: string } = new Error("Account missing email.");
+      err.code = "INVALID_CREDENTIALS";
+      throw err;
+    }
+    emailToUse = emailFromProfile;
   }
 
-  // Try to map the mock server response into our AuthUser type.
-  // Falls back to using the supplied cellNumber if the shape is different.
-  let parsed: any = null;
-  try {
-    parsed = await response.json();
-  } catch {
-    parsed = null;
+  if (!emailToUse) {
+    throw new Error("Login failed. Please try again.");
+  }
+  await signInWithEmailAndPassword(auth, emailToUse, password);
+
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error("Login failed. Please try again.");
   }
 
-  const userFromResponse =
-    parsed?.user || parsed?.data || parsed?.result || parsed;
+  const profileSnap = await getDoc(userDoc(user.uid));
+  if (!profileSnap.exists()) {
+    return {
+      id: user.uid,
+      fullName: "",
+      email: emailToUse,
+      cellNumber: input,
+    };
+  }
 
-  return {
-    id: userFromResponse?.id ?? 'mock-user-id',
-    fullName: userFromResponse?.fullName ?? 'Ukho User',
-    email: userFromResponse?.email ?? 'demo@ukho.app',
-    cellNumber: userFromResponse?.cellNumber ?? cellNumber,
-  };
+  return buildAuthUser(profileSnap.id, profileSnap.data() as Record<string, unknown>);
 }
 
+export async function signOut(): Promise<void> {
+  await firebaseSignOut(auth);
+}

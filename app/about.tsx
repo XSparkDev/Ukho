@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { Linking, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
+import { AnimatedButton } from '@/components/AnimatedButton';
 import { AnimatedCard } from '@/components/AnimatedCard';
 import { DropdownMenu } from '@/components/DropdownMenu';
 import { ScreenContainer } from '@/components/ScreenContainer';
@@ -12,11 +13,11 @@ import { BorderRadius, CardStyles, Spacing, Typography } from '@/constants/Style
 import { useTheme } from '@/constants/Theme';
 
 const ABOUT_SECTIONS = [
-  { id: 'purpose', title: 'Our Purpose', icon: 'heart', description: 'Ukho connects you to your roots, kin, and cultural lineage through clan identity and community.' },
-  { id: 'governance', title: 'Cultural Governance', icon: 'shield', description: 'We honour traditional structures and work with elders and cultural custodians to steward this space.' },
-  { id: 'version', title: 'Version', icon: 'info', description: 'Ukho Network Mobile 1.0.0' },
-  { id: 'legal', title: 'Legal', icon: 'file-text', description: 'Terms of Service and Privacy Policy', url: 'https://ukho.network/terms' },
-  { id: 'contact', title: 'Contact & Support', icon: 'mail', description: 'Get help or send feedback', url: 'https://ukho.network/contact' },
+  { id: 'purpose', title: 'Our Purpose', icon: 'heart', description: 'Ukho connects you to your roots, kin, and cultural lineage through clan identity and community.', keywords: 'purpose roots kin clan' },
+  { id: 'governance', title: 'Cultural Governance', icon: 'shield', description: 'We honour traditional structures and work with elders and cultural custodians to steward this space.', keywords: 'governance elders custodians' },
+  { id: 'version', title: 'Version', icon: 'info', description: 'Ukho Network Mobile 1.0.0', keywords: 'version app' },
+  { id: 'legal', title: 'Legal', icon: 'file-text', description: 'Terms of Service and Privacy Policy', url: 'https://ukho.network/terms', keywords: 'terms privacy legal' },
+  { id: 'contact', title: 'Contact & Support', icon: 'mail', description: 'Get help or send feedback', url: 'https://ukho.network/contact', keywords: 'contact support help' },
 ];
 
 export default function AboutScreen() {
@@ -35,9 +36,9 @@ export default function AboutScreen() {
     <ScreenContainer>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.headerRow}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton} activeOpacity={0.8}>
+          <AnimatedButton onPress={() => router.back()} style={styles.backButton}>
             <Feather name="arrow-left" size={20} color={theme.textMain} />
-          </TouchableOpacity>
+          </AnimatedButton>
           <View style={styles.iconBadge}>
             <Feather name="info" size={18} color="#fff" />
           </View>
@@ -49,6 +50,14 @@ export default function AboutScreen() {
               PURPOSE, GOVERNANCE & SUPPORT
             </ThemedText>
           </View>
+          <TouchableOpacity
+            onPress={() => router.push('/settings-search')}
+            style={styles.searchIconButton}
+            activeOpacity={0.7}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Feather name="search" size={22} color={theme.textMain} />
+          </TouchableOpacity>
           <View style={styles.menuContainer}>
             <DropdownMenu currentRoute="about" />
           </View>
@@ -115,7 +124,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerContent: { flex: 1 },
+  headerContent: { flex: 1, minWidth: 0 },
+  searchIconButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   menuContainer: { marginLeft: Spacing[2] },
   title: { fontSize: 22, fontWeight: '900' },
   subtitle: {
