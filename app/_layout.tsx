@@ -1,14 +1,14 @@
 import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import '@/app/firebase/config';
 import { ThemeProvider as UkhoThemeProvider, useTheme } from '@/constants/Theme';
 import { ROUTES } from '@/constants/routes';
-import { AuthProvider } from '@/context/AuthContext';
 import { BlockedUsersProvider } from '@/context/BlockedUsersContext';
+import { ensureDefaultRoles } from '@/services/roleFirestoreService';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -41,14 +41,16 @@ function RootStack() {
 }
 
 export default function RootLayout() {
+  useEffect(() => {
+    ensureDefaultRoles().catch((e) => console.warn('Roles seed failed:', e));
+  }, []);
+
   return (
     <SafeAreaProvider>
       <UkhoThemeProvider>
-        <AuthProvider>
-          <BlockedUsersProvider>
-            <RootStack />
-          </BlockedUsersProvider>
-        </AuthProvider>
+        <BlockedUsersProvider>
+          <RootStack />
+        </BlockedUsersProvider>
       </UkhoThemeProvider>
     </SafeAreaProvider>
   );

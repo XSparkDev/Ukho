@@ -2,6 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
+    Image,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -18,9 +19,7 @@ import { UkhoGradient } from '@/constants/Colors';
 import { ROUTES } from '@/constants/routes';
 import { BorderRadius, Spacing, Typography } from '@/constants/Styles';
 import { useTheme } from '@/constants/Theme';
-import { useAuth } from '@/context/AuthContext';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useEffect } from 'react';
 import { login, register } from '../services/authService';
 
 type AuthMode = 'login' | 'register';
@@ -28,7 +27,6 @@ type AuthMode = 'login' | 'register';
 export default function AuthScreen() {
   const router = useRouter();
   const { isLightMode, theme } = useTheme();
-  const { user: authUser, isLoading: authLoading } = useAuth();
   const [mode, setMode] = useState<AuthMode>('login');
   const [cellNumber, setCellNumber] = useState('');
   const [password, setPassword] = useState('');
@@ -41,11 +39,6 @@ export default function AuthScreen() {
 
   const isRegister = mode === 'register';
 
-  useEffect(() => {
-    if (authLoading) return;
-    if (authUser) router.replace(ROUTES.TABS_ROOT);
-  }, [authLoading, authUser, router]);
-
   const getToastColor = (code?: string | null) => {
     switch (code) {
       case 'INVALID_CREDENTIALS':
@@ -57,6 +50,12 @@ export default function AuthScreen() {
       default:
         return '#ef4444'; // red-500 generic error
     }
+  };
+
+  const handleFillTestCredentials = () => {
+    // Convenience helper for development login
+    setCellNumber('liheci3702@cimario.com');
+    setPassword('Password.10');
   };
 
   const handleSubmit = async () => {
@@ -88,15 +87,6 @@ export default function AuthScreen() {
     }
   };
 
-  if (authLoading) {
-    return (
-      <ScreenContainer style={styles.root}>
-        <View style={styles.flex} />
-        <LoadingSpinner size="large" color="#f97316" />
-      </ScreenContainer>
-    );
-  }
-
   return (
     <ScreenContainer style={styles.root}>
       {/* Tribal Background Elements */}
@@ -117,33 +107,20 @@ export default function AuthScreen() {
           bounces={false}
         >
           <View style={styles.cardWrapper}>
-            {/* Logo + Title */}
+            {/* Logo - light theme: black "Ukho"; dark theme: white "Ukho" via ukho-logo-dark.png */}
             <View style={styles.header}>
-              <LinearGradient
-                colors={[UkhoGradient.start, UkhoGradient.end]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.logoGradient}
-              >
-                <ThemedText style={styles.logoGlyph}>ü</ThemedText>
-              </LinearGradient>
-              <ThemedText
-                type="title"
-                style={[
-                  styles.brandTitle,
-                  { color: theme.textMain, fontFamily: Typography.spaceGrotesk },
-                ]}
-              >
-                UKHO
-              </ThemedText>
-              <ThemedText
-                style={[
-                  styles.tagline,
-                  { color: '#f97316', letterSpacing: Typography.letterSpacing.widest },
-                ]}
-              >
-                CONNECT YOUR ROOTS
-              </ThemedText>
+              <View style={styles.logoContainer}>
+                <Image
+                  source={
+                    isLightMode
+                      ? require('@/assets/images/ukho-logo.png')
+                      : require('@/assets/images/ukho-logo-dark.png')
+                  }
+                  style={styles.logoImage}
+                  resizeMode="contain"
+                  accessibilityLabel="Ukho logo"
+                />
+              </View>
             </View>
 
             {/* Glass Panel Card */}
@@ -294,6 +271,16 @@ export default function AuthScreen() {
                   />
                 </View>
 
+                {/* Dev helper: quick-fill test credentials */}
+                {!isRegister && (
+                  <ThemedText
+                    style={[styles.devHelperText, { color: theme.textDim }]}
+                    onPress={handleFillTestCredentials}
+                  >
+                    Use my test login
+                  </ThemedText>
+                )}
+
                 {/* Submit */}
                 <LinearGradient
                   colors={[UkhoGradient.start, UkhoGradient.end]}
@@ -400,30 +387,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing[6],
   },
-  logoGradient: {
-    width: 112,
-    height: 112,
-    borderRadius: 32,
+  logoContainer: {
+    width: 200,
+    aspectRatio: 1,
+    maxHeight: 200,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing[4],
+    borderRadius: BorderRadius['2xl'],
   },
-  logoGlyph: {
-    fontSize: 52,
-    color: '#fff',
-    fontWeight: '900',
-    textTransform: 'lowercase',
-  },
-  brandTitle: {
-    fontSize: 32,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-    fontStyle: 'italic',
-  },
-  tagline: {
-    marginTop: 8,
-    fontSize: 10,
-    fontWeight: '900',
+  logoImage: {
+    width: '100%',
+    height: '100%',
   },
   glassCard: {
     borderRadius: BorderRadius['3rem'],
@@ -516,6 +490,12 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: Typography.letterSpacing.widest,
     color: 'rgba(249, 115, 22, 0.6)',
+  },
+  devHelperText: {
+    marginTop: Spacing[2],
+    fontSize: 10,
+    textAlign: 'right',
+    textDecorationLine: 'underline',
   },
 });
 

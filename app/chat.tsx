@@ -18,6 +18,7 @@ import { ThemedText } from '@/components/themed-text';
 import { BrandColors } from '@/constants/Colors';
 import { BorderRadius, Spacing, Typography } from '@/constants/Styles';
 import { useTheme } from '@/constants/Theme';
+import { useBlockedUsers } from '@/context/BlockedUsersContext';
 
 export default function ChatScreen() {
   const { theme } = useTheme();
@@ -28,7 +29,10 @@ export default function ChatScreen() {
   const avatar = params.avatar ?? '';
 
   const [message, setMessage] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
   const [messages] = useState<{ id: string; text: string; fromMe: boolean }[]>([]);
+
+  const { addBlockedUser } = useBlockedUsers();
 
   const sendMessage = () => {
     const trimmed = message.trim();
@@ -69,8 +73,64 @@ export default function ChatScreen() {
               </ThemedText>
             </View>
           </TouchableOpacity>
-          <View style={styles.headerRight} />
+          <View style={styles.headerRight}>
+            <TouchableOpacity
+              onPress={() => setMenuOpen((prev) => !prev)}
+              style={styles.menuButton}
+              activeOpacity={0.7}
+            >
+              <Feather name="more-vertical" size={20} color={theme.textMain} />
+            </TouchableOpacity>
+          </View>
         </View>
+
+        {menuOpen && (
+          <View
+            style={[
+              styles.menuContainer,
+              {
+                backgroundColor: theme.panelBg,
+                borderColor: theme.borderColor,
+              },
+            ]}
+          >
+            {[
+              'View contact',
+              'Search',
+              'Media, links and docs',
+              'Mute notifications',
+              'Report',
+              'Clear chat',
+              'Block',
+              'Add to favorites',
+            ].map((label) => (
+              <TouchableOpacity
+                key={label}
+                style={styles.menuItem}
+                activeOpacity={0.7}
+                onPress={() => {
+                  if (label === 'Block' && id) {
+                    addBlockedUser({
+                      id,
+                      name,
+                      avatar: avatar || '',
+                      blockType: 'fully_blocked',
+                    });
+                    setMenuOpen(false);
+                    router.push('/blocked');
+                    return;
+                  }
+                  // Placeholder for other menu actions
+                  setMenuOpen(false);
+                }}
+              >
+                <ThemedText style={[styles.menuItemText, { color: theme.textMain }]}>
+                  {label}
+                </ThemedText>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
         {/* Messages */}
         <ScrollView
@@ -208,6 +268,37 @@ const styles = StyleSheet.create({
   },
   headerRight: {
     width: 40,
+    alignItems: 'flex-end',
+  },
+  menuButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  menuContainer: {
+    position: 'absolute',
+    top: Spacing[4] + 44, // below header
+    right: Spacing[4],
+    borderRadius: BorderRadius['2xl'],
+    borderWidth: 1,
+    paddingVertical: Spacing[2],
+    paddingHorizontal: Spacing[2],
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
+    gap: Spacing[1],
+  },
+  menuItem: {
+    paddingVertical: Spacing[1],
+    paddingHorizontal: Spacing[2],
+  },
+  menuItemText: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: '500',
   },
   messagesScroll: {
     flex: 1,
