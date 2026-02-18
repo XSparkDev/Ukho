@@ -8,10 +8,8 @@ import { AnimatedCard } from '@/components/AnimatedCard';
 import { ScreenContainer } from '@/components/ScreenContainer';
 import { ThemedText } from '@/components/themed-text';
 import { BrandColors } from '@/constants/Colors';
-import { ROUTES } from '@/constants/routes';
 import { BorderRadius, CardStyles, Spacing, Typography } from '@/constants/Styles';
 import { useTheme } from '@/constants/Theme';
-import { useAuth } from '@/context/AuthContext';
 
 const ACCOUNT_OPTIONS = [
     {
@@ -53,25 +51,20 @@ const ACCOUNT_OPTIONS = [
     },
   ].map((o) => ({ ...o, keywords: (o as { keywords?: string }).keywords ?? o.title }));
 
-function useAccountHandlers(router: ReturnType<typeof useRouter>) {
-  const { signOut } = useAuth();
-  const handleSignOut = async () => {
-    await signOut();
-    router.replace(ROUTES.AUTH as any);
-  };
-  return { handleSignOut };
-}
-
 export default function AccountScreen() {
   const { theme } = useTheme();
   const router = useRouter();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const { handleSignOut } = useAccountHandlers(router);
 
-  const handleDeleteAccount = async () => {
+  const handleDeleteAccount = () => {
+    // Placeholder for delete account logic
+    console.log('Delete account confirmed');
+    // In a real app, this would:
+    // - Call API to delete account
+    // - Clear all user data
+    // - Navigate to auth screen
     setShowDeleteModal(false);
-    // TODO: Call Firebase to delete user + Firestore data, then sign out
-    await handleSignOut();
+    // router.replace('/auth');
   };
 
   return (
@@ -153,31 +146,6 @@ export default function AccountScreen() {
               </AnimatedCard>
             );
           })}
-          <AnimatedCard
-            onPress={handleSignOut}
-            style={[
-              CardStyles.base,
-              {
-                backgroundColor: theme.panelBg,
-                borderColor: theme.borderColor,
-              },
-            ]}
-          >
-            <View style={styles.optionHeader}>
-              <View style={[styles.optionIcon, { backgroundColor: 'rgba(249, 115, 22, 0.1)' }]}>
-                <Feather name="log-out" size={20} color={BrandColors.orange500} />
-              </View>
-              <View style={styles.optionContent}>
-                <ThemedText style={[styles.optionTitle, { color: theme.textMain }]}>
-                  Sign out
-                </ThemedText>
-                <ThemedText style={[styles.optionDescription, { color: theme.textDim }]}>
-                  Sign out of your account on this device
-                </ThemedText>
-              </View>
-              <Feather name="chevron-right" size={18} color={theme.textDim} />
-            </View>
-          </AnimatedCard>
         </View>
       </ScrollView>
 

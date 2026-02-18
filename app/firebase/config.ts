@@ -19,7 +19,12 @@ const missingVars = Object.entries(requiredEnvVars)
 
 if (missingVars.length > 0) {
   console.error("Missing Firebase environment variables:", missingVars);
-  throw new Error(`Missing required Firebase environment variables: ${missingVars.join(", ")}`);
+  // Don't throw during development - allow app to start but log error
+  if (process.env.NODE_ENV !== "production") {
+    console.warn("Firebase config incomplete. Some features may not work.");
+  } else {
+    throw new Error(`Missing required Firebase environment variables: ${missingVars.join(", ")}`);
+  }
 }
 
 const firebaseConfig = {

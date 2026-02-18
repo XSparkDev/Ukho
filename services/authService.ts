@@ -7,6 +7,7 @@ import {
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
 import { auth, db } from "@/app/firebase/config";
+import { ensureUserDocument } from "@/services/userFirestoreService";
 
 export type LoginPayload = {
   cellNumber: string;
@@ -25,10 +26,9 @@ export type AuthUser = {
   cellNumber: string;
 };
 
-const usersRef = () => db;
-const userDoc = (uid: string) => doc(usersRef(), "users", uid);
+const userDoc = (uid: string) => doc(db, "users", uid);
 const usersByCellRef = (cell: string) =>
-  doc(usersRef(), "usersByCell", cell.trim().toLowerCase());
+  doc(db, "usersByCell", cell.trim().toLowerCase());
 
 function buildAuthUser(uid: string, data: Record<string, unknown>): AuthUser {
   return {
@@ -79,6 +79,12 @@ export async function register(payload: RegisterPayload): Promise<AuthUser> {
   if (cellKey) {
     await setDoc(usersByCellRef(cellNumber), { uid });
   }
+
+  await ensureUserDocument(uid, {
+    email: email.trim(),
+    fullName: fullName.trim(),
+    cellNumber: cellNumber.trim(),
+  });
 
   return buildAuthUser(uid, userData);
 }
@@ -139,6 +145,16 @@ export async function login(payload: LoginPayload): Promise<AuthUser> {
   }
 
   const profileSnap = await getDoc(userDoc(user.uid));
+  const profileData = profileSnap.exists()
+    ? (profileSnap.data() as Record<string, unknown>)
+    : null;
+
+  await ensureUserDocument(user.uid, {
+    email: emailToUse,
+    fullName: profileData?.fullName as string | undefined,
+    cellNumber: (profileData?.cellNumber as string) ?? input,
+  });
+
   if (!profileSnap.exists()) {
     return {
       id: user.uid,

@@ -97,17 +97,12 @@ const CHATS: Chat[] = [
 export default function RelationsScreen() {
   const { theme } = useTheme();
   const router = useRouter();
-  const { addBlockedUser, isBlocked } = useBlockedUsers();
+  const { isBlocked } = useBlockedUsers();
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
 
   const sortedChats = useMemo(() => CHATS.filter((c) => !isBlocked(c.id)), [isBlocked]);
   const peopleYouKnow = useMemo(() => PEOPLE_YOU_KNOW.filter((p) => !isBlocked(p.id)), [isBlocked]);
-
-  const handleBlock = (item: { id: string; name: string; avatar: string }) => {
-    addBlockedUser({ id: item.id, name: item.name, avatar: item.avatar, blockType: 'fully_blocked' });
-    router.push('/blocked');
-  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -137,9 +132,11 @@ export default function RelationsScreen() {
       </ThemedText>
       <AnimatedButton
         style={[styles.blockIconBtn, { borderColor: theme.borderColor }]}
-        onPress={() => handleBlock(item)}
+        onPress={() => {
+          // TODO: add this person to contacts / suggestions
+        }}
       >
-        <Feather name="user-x" size={14} color={theme.textDim} />
+        <Feather name="user-plus" size={14} color={theme.textDim} />
       </AnimatedButton>
     </View>
   );
@@ -154,7 +151,10 @@ export default function RelationsScreen() {
         ]}
         onPress={() => {
           setSelectedChatId(item.id);
-          console.log('Open chat:', item.id);
+          router.push({
+            pathname: '/chat',
+            params: { id: item.id, name: item.name, avatar: item.avatar },
+          });
         }}
       >
         <View style={styles.chatAvatarWrapper}>
@@ -208,12 +208,6 @@ export default function RelationsScreen() {
             </ThemedText>
           )}
         </View>
-        <AnimatedButton
-          style={[styles.blockIconBtn, { borderColor: theme.borderColor }]}
-          onPress={() => handleBlock(item)}
-        >
-          <Feather name="user-x" size={16} color={theme.textDim} />
-        </AnimatedButton>
       </Pressable>
     );
   };

@@ -1,9 +1,11 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useMemo } from 'react';
-import { FlatList, Image, ScrollView, StyleSheet, View } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, FlatList, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { AnimatedButton } from '@/components/AnimatedButton';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { DropdownMenu } from '@/components/DropdownMenu';
 import { ScreenContainer } from '@/components/ScreenContainer';
 import { ThemedText } from '@/components/themed-text';
@@ -11,6 +13,7 @@ import { BrandColors } from '@/constants/Colors';
 import { BorderRadius, Spacing, Typography } from '@/constants/Styles';
 import { useTheme } from '@/constants/Theme';
 import { useBlockedUsers } from '@/context/BlockedUsersContext';
+import { getRandomUsers, type UserProfile } from '@/services/userService';
 
 type CommunityPost = {
   id: string;
@@ -23,6 +26,146 @@ type CommunityPost = {
   content: string;
   likes: number;
   comments: number;
+  rating?: number; // Rating out of 5, only show if >= 3
+};
+
+type ClanArticle = {
+  id: string;
+  title: string;
+  excerpt: string;
+  author: string;
+  publishedAt: string;
+  imageUrl?: string;
+  tribe: string;
+  clan: string;
+  region: string[];
+};
+
+const CLAN_ARTICLES: ClanArticle[] = [
+  {
+    id: 'a1',
+    title: 'The Legacy of the Khumalo Clan',
+    excerpt: 'Exploring the rich history and traditions of the Khumalo clan, from their origins to modern-day contributions.',
+    author: 'Elder Mthimkhulu',
+    publishedAt: '2 days ago',
+    imageUrl: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&q=80&w=400',
+    tribe: 'ZULU',
+    clan: 'KHUMALO',
+    region: ['KwaZulu-Natal', 'Gauteng'],
+  },
+  {
+    id: 'a2',
+    title: 'Xhosa Traditions: The Wisdom of the Elders',
+    excerpt: 'A deep dive into Xhosa cultural practices and the role of elders in preserving ancestral knowledge.',
+    author: 'Gogo Dlamini',
+    publishedAt: '5 days ago',
+    imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400',
+    tribe: 'XHOSA',
+    clan: 'MADIBA',
+    region: ['Eastern Cape', 'Western Cape'],
+  },
+  {
+    id: 'a3',
+    title: 'The Zulu Royal Lineage',
+    excerpt: 'Understanding the structure and significance of Zulu royal families and their impact on South African history.',
+    author: 'Nkosi Zwelithini',
+    publishedAt: '1 week ago',
+    tribe: 'ZULU',
+    clan: 'ZULU',
+    region: ['KwaZulu-Natal'],
+  },
+  {
+    id: 'a4',
+    title: 'Clan Gatherings: Unity in Tradition',
+    excerpt: 'How modern clan gatherings bridge the gap between ancestral traditions and contemporary community needs.',
+    author: 'Baba Mthimkhulu',
+    publishedAt: '2 weeks ago',
+    imageUrl: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&q=80&w=400',
+    tribe: 'ZULU',
+    clan: 'GUMEDE',
+    region: ['KwaZulu-Natal', 'Gauteng', 'Mpumalanga'],
+  },
+  {
+    id: 'a5',
+    title: 'The Dlamini Heritage',
+    excerpt: 'Tracing the Dlamini clan\'s journey through Swaziland and South Africa, preserving their unique identity.',
+    author: 'Gogo Dlamini',
+    publishedAt: '3 weeks ago',
+    tribe: 'SWAZI',
+    clan: 'DLAMINI',
+    region: ['Mpumalanga', 'KwaZulu-Natal'],
+  },
+];
+
+type CollapsibleSectionProps = {
+  label: string;
+  icon: React.ReactNode;
+  titleColor: string;
+  chevronColor: string;
+  children: React.ReactNode;
+};
+
+const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
+  label,
+  icon,
+  titleColor,
+  chevronColor,
+  children,
+}) => {
+  const [expanded, setExpanded] = useState(false);
+  const [contentHeight, setContentHeight] = useState(0);
+  const animated = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(animated, {
+      toValue: expanded ? 1 : 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  }, [expanded, animated]);
+
+  const onLayoutContent = (event: any) => {
+    const height = event.nativeEvent.layout.height;
+    if (height > 0 && contentHeight === 0) {
+      setContentHeight(height);
+    }
+  };
+
+  const heightStyle =
+    contentHeight === 0
+      ? {}
+      : {
+          height: animated.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0, contentHeight],
+          }),
+        };
+
+  const chevronRotation = animated.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '90deg'],
+  });
+
+  return (
+    <View>
+      <AnimatedButton
+        style={styles.collapsibleHeader}
+        onPress={() => setExpanded((prev) => !prev)}
+      >
+        <View style={styles.collapsibleHeaderLeft}>
+          {icon}
+          <ThemedText style={[styles.collapsibleTitle, { color: titleColor }]}>{label}</ThemedText>
+        </View>
+        <Animated.View style={{ transform: [{ rotate: chevronRotation }] }}>
+          <Feather name="chevron-right" size={16} color={chevronColor} />
+        </Animated.View>
+      </AnimatedButton>
+
+      <Animated.View style={[{ overflow: 'hidden', opacity: animated }, heightStyle]}>
+        <View onLayout={onLayoutContent}>{children}</View>
+      </Animated.View>
+    </View>
+  );
 };
 
 const POSTS: CommunityPost[] = [
@@ -39,6 +182,7 @@ const POSTS: CommunityPost[] = [
       'Just attended the clan gathering in Eastern Cape. The wisdom shared by the elders was profound. Unity is our strength. ✊🏾🇿🇦',
     likes: 420,
     comments: 24,
+    rating: 4.7,
   },
   {
     id: 'p2',
@@ -53,55 +197,124 @@ const POSTS: CommunityPost[] = [
       'Looking for Khumalo clan contacts in Johannesburg for a traditional ceremony request. Any leads?',
     likes: 89,
     comments: 15,
-  },
-];
-
-// People You May Know suggestions (derived from Possible/Nearby Kin concepts)
-const PEOPLE_YOU_MAY_KNOW = [
-  {
-    id: 's1',
-    name: 'Lungile Khumalo',
-    clan: 'KHUMALO',
-    hint: 'Direct Clan Match',
-    avatar:
-      'https://images.unsplash.com/photo-1531384441138-2736e62e0919?auto=format&fit=crop&q=80&w=150&h=150',
-  },
-  {
-    id: 's2',
-    name: 'Sabelo Mabaso',
-    clan: 'MABASO',
-    hint: 'Related Branch',
-    avatar:
-      'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&q=80&w=150&h=150',
-  },
-  {
-    id: 's3',
-    name: 'Nomalanga Mntungwa',
-    clan: 'MNTUNGWA',
-    hint: 'Shared Praises',
-    avatar:
-      'https://images.unsplash.com/photo-1567532939604-b6c5b0ad2e01?auto=format&fit=crop&q=80&w=150&h=150',
-  },
-  {
-    id: 's4',
-    name: 'Thabo Dlamini',
-    clan: 'DLAMINI',
-    hint: 'Nearby in Soweto • 0.4km',
-    avatar:
-      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=150&h=150',
+    rating: 3.5,
   },
 ];
 
 export default function CommunityScreen() {
-  const { theme } = useTheme();
+  const { theme, isLightMode } = useTheme();
   const router = useRouter();
-  const { addBlockedUser, isBlocked } = useBlockedUsers();
+  const { isBlocked } = useBlockedUsers();
+  const [randomUsers, setRandomUsers] = useState<UserProfile[]>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(true);
+  const [userPreferences, setUserPreferences] = useState<{
+    tribe?: string;
+    clan?: string;
+    region?: string;
+  }>({});
+
+  // Load user preferences from AsyncStorage
+  useEffect(() => {
+    const loadPreferences = async () => {
+      try {
+        const [tribe, clan, region] = await Promise.all([
+          AsyncStorage.getItem('@ukho_user_tribe'),
+          AsyncStorage.getItem('@ukho_user_clan'),
+          AsyncStorage.getItem('@ukho_user_region'),
+        ]);
+        setUserPreferences({
+          tribe: tribe || undefined,
+          clan: clan || undefined,
+          region: region || undefined,
+        });
+      } catch (error) {
+        console.error('Failed to load user preferences:', error);
+      }
+    };
+
+    loadPreferences();
+  }, []);
+
+  // Fetch random users on mount and reshuffle each time screen loads
+  useEffect(() => {
+    const loadUsers = async () => {
+      setIsLoadingUsers(true);
+      try {
+        const users = await getRandomUsers(12); // Fetch 12 random users
+        setRandomUsers(users);
+      } catch (error) {
+        console.error('Failed to load random users:', error);
+        setRandomUsers([]);
+      } finally {
+        setIsLoadingUsers(false);
+      }
+    };
+
+    loadUsers();
+  }, []); // Empty deps - reshuffle on mount only
 
   const filteredSuggestions = useMemo(
-    () => PEOPLE_YOU_MAY_KNOW.filter((s) => !isBlocked(s.id)),
-    [isBlocked]
+    () => randomUsers.filter((user) => !isBlocked(user.id)),
+    [randomUsers, isBlocked]
   );
   const filteredPosts = useMemo(() => POSTS.filter((p) => !isBlocked(p.id)), [isBlocked]);
+
+  // Filter articles based on user preferences (tribe, clan, region)
+  const filteredArticles = useMemo(() => {
+    if (!userPreferences.tribe && !userPreferences.clan && !userPreferences.region) {
+      // If no preferences set, show all articles
+      return CLAN_ARTICLES;
+    }
+
+    return CLAN_ARTICLES.filter((article) => {
+      const matchesTribe = !userPreferences.tribe || article.tribe === userPreferences.tribe;
+      const matchesClan = !userPreferences.clan || article.clan === userPreferences.clan;
+      const matchesRegion =
+        !userPreferences.region || article.region.includes(userPreferences.region);
+
+      // Show article if it matches any of the user's preferences
+      return matchesTribe || matchesClan || matchesRegion;
+    });
+  }, [userPreferences]);
+
+  // Create a mixed feed with posts and randomly inserted "People You May Know" sections
+  const mixedFeed = useMemo(() => {
+    const feed: Array<{ type: 'post' | 'suggestions'; data: any; id: string }> = [];
+    
+    // Add all posts to the feed
+    filteredPosts.forEach((post) => {
+      feed.push({ type: 'post', data: post, id: `post-${post.id}` });
+    });
+
+    // Randomly insert "People You May Know" sections between posts
+    // Insert 2-3 suggestion sections randomly in the feed
+    const numSuggestions = Math.min(3, Math.max(2, Math.floor(filteredPosts.length / 2)));
+    const suggestionIndices: number[] = [];
+    
+    // Generate random positions (avoiding first position)
+    for (let i = 0; i < numSuggestions && filteredSuggestions.length > 0; i++) {
+      let position;
+      do {
+        position = Math.floor(Math.random() * (feed.length + 1));
+      } while (position === 0 || suggestionIndices.includes(position));
+      
+      suggestionIndices.push(position);
+    }
+
+    // Sort indices in descending order to insert from end to beginning
+    suggestionIndices.sort((a, b) => b - a);
+
+    // Insert suggestion sections at random positions
+    suggestionIndices.forEach((index) => {
+      feed.splice(index, 0, {
+        type: 'suggestions',
+        data: filteredSuggestions,
+        id: `suggestions-${index}-${Date.now()}`,
+      });
+    });
+
+    return feed;
+  }, [filteredPosts, filteredSuggestions]);
 
   const handleConnectKin = (postId: string) => {
     console.log('Connect kin for post:', postId);
@@ -111,9 +324,11 @@ export default function CommunityScreen() {
     console.log('Connect suggestion:', id);
   };
 
-  const handleBlock = (item: { id: string; name: string; avatar: string }) => {
-    addBlockedUser({ id: item.id, name: item.name, avatar: item.avatar, blockType: 'fully_blocked' });
-    router.push('/blocked');
+  const handleProfileTap = (user: UserProfile) => {
+    // Navigate to profile screen - placeholder for now
+    // TODO: Create profile screen route
+    console.log('Open profile:', user.id);
+    // router.push({ pathname: '/profile', params: { userId: user.id } });
   };
 
   return (
@@ -136,7 +351,7 @@ export default function CommunityScreen() {
                 Community Stories
               </ThemedText>
               <ThemedText style={[styles.headerSubtitle, { color: BrandColors.orange500 }]}>
-                VOICES FROM THE UKHO NETWORK
+                Home of your kin
               </ThemedText>
             </View>
           </View>
@@ -145,167 +360,288 @@ export default function CommunityScreen() {
           </View>
         </View>
 
-        {/* People You May Know */}
-        <View style={styles.suggestionsSection}>
-          <View style={styles.suggestionsHeaderRow}>
-            <ThemedText style={[styles.suggestionsTitle, { color: theme.textMain }]}>
-              People You May Know
-            </ThemedText>
-            <ThemedText style={[styles.suggestionsSubtitle, { color: theme.textDim }]}>
-              Possible & Nearby Kin
-            </ThemedText>
-          </View>
-          <FlatList
-            horizontal
-            data={filteredSuggestions}
-            keyExtractor={(item) => item.id}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.suggestionsList}
-            renderItem={({ item }) => (
-              <View
-                style={[
-                  styles.suggestionCard,
-                  { backgroundColor: theme.panelBg, borderColor: theme.borderColor },
-                ]}
-              >
-                <Image source={{ uri: item.avatar }} style={styles.suggestionAvatar} />
-                <ThemedText
-                  style={[styles.suggestionName, { color: theme.textMain }]}
-                  numberOfLines={1}
-                >
-                  {item.name}
-                </ThemedText>
-                <ThemedText style={styles.suggestionClan} numberOfLines={1}>
-                  {item.clan}
-                </ThemedText>
-                <ThemedText
-                  style={[styles.suggestionHint, { color: theme.textDim }]}
-                  numberOfLines={2}
-                >
-                  {item.hint}
-                </ThemedText>
-                <View style={styles.suggestionActions}>
-                  <AnimatedButton
-                    onPress={() => handleConnectSuggestion(item.id)}
-                    style={styles.suggestionConnectButton}
-                  >
-                    <View style={styles.suggestionConnectInner}>
-                      <Feather name="user-plus" size={14} color="#fff" />
-                      <ThemedText style={styles.suggestionConnectText}>CONNECT</ThemedText>
-                    </View>
-                  </AnimatedButton>
-                  <AnimatedButton
-                    style={[styles.blockIconBtn, { borderColor: theme.borderColor }]}
-                    onPress={() => handleBlock(item)}
-                  >
-                    <Feather name="user-x" size={12} color={theme.textDim} />
-                  </AnimatedButton>
-                </View>
-              </View>
-            )}
-          />
-        </View>
-
-        {/* Posts */}
-        <View style={styles.postList}>
-          {filteredPosts.map((post) => (
-            <View
-              key={post.id}
-              style={[
-                styles.postCard,
-                {
-                  backgroundColor: theme.panelBg,
-                  borderColor: theme.borderColor,
-                },
-              ]}
-            >
-              {/* Header row */}
-              <View style={styles.postHeaderRow}>
-                <View style={styles.avatarWrapper}>
-                  <Image source={{ uri: post.avatar }} style={styles.avatar} />
-                  <View style={styles.verifiedBadge}>
-                    <Feather name="shield" size={10} color="#fff" />
-                  </View>
-                </View>
-
-                <View style={styles.postMeta}>
-                  <View style={styles.nameHandleRow}>
-                    <ThemedText style={[styles.name, { color: theme.textMain }]}>
-                      {post.name}
-                    </ThemedText>
-                    <ThemedText style={[styles.handle, { color: theme.textDim }]}>
-                      {post.handle}
-                    </ThemedText>
-                  </View>
-                  <View style={styles.clanRow}>
-                    <View style={styles.clanTag}>
-                      <ThemedText style={styles.clanTagText}>{post.clan}</ThemedText>
-                    </View>
-                    <View style={styles.clanTagMuted}>
-                      <ThemedText style={styles.clanTagMutedText}>{post.tribe}</ThemedText>
-                    </View>
-                  </View>
-                </View>
-
-                <ThemedText style={[styles.timeAgo, { color: theme.textDim }]}>
-                  {post.timeAgo}
-                </ThemedText>
-                <AnimatedButton
-                  style={[styles.blockIconBtn, { borderColor: theme.borderColor }]}
-                  onPress={() => handleBlock(post)}
-                >
-                  <Feather name="user-x" size={14} color={theme.textDim} />
-                </AnimatedButton>
-              </View>
-
-              {/* Content */}
-              <ThemedText style={[styles.postContent, { color: theme.textMain }]}>
-                {post.content}
+        {/* Clan Articles - Collapsible */}
+        <CollapsibleSection
+          label="CLAN STORIES & ARTICLES"
+          icon={<Feather name="book-open" size={20} color={BrandColors.orange500} />}
+          titleColor={theme.textMain}
+          chevronColor={theme.textDim}
+        >
+          {filteredArticles.length === 0 ? (
+            <View style={styles.emptyArticlesContainer}>
+              <Feather name="book-open" size={32} color={theme.textDim} />
+              <ThemedText style={[styles.emptyArticlesText, { color: theme.textDim }]}>
+                No articles match your preferences. Set your tribe, clan, or region in Settings to see
+                personalized stories.
               </ThemedText>
+            </View>
+          ) : (
+            <View style={styles.articlesList}>
+              {filteredArticles.map((article) => (
+                <TouchableOpacity
+                  key={article.id}
+                  style={[
+                    styles.articleCard,
+                    { backgroundColor: theme.panelBg, borderColor: theme.borderColor },
+                  ]}
+                  activeOpacity={0.9}
+                  onPress={() => {
+                    // TODO: Navigate to article detail screen
+                    console.log('Open article:', article.id);
+                  }}
+                >
+                  {article.imageUrl && (
+                    <Image source={{ uri: article.imageUrl }} style={styles.articleImage} />
+                  )}
+                  <View style={styles.articleContent}>
+                    <View style={styles.articleHeader}>
+                      <View style={styles.articleTags}>
+                        <View style={styles.articleTag}>
+                          <ThemedText style={styles.articleTagText}>{article.tribe}</ThemedText>
+                        </View>
+                        <View style={[styles.articleTag, styles.articleTagClan]}>
+                          <ThemedText style={styles.articleTagTextClan}>{article.clan}</ThemedText>
+                        </View>
+                      </View>
+                      <ThemedText style={[styles.articleDate, { color: theme.textDim }]}>
+                        {article.publishedAt}
+                      </ThemedText>
+                    </View>
+                    <ThemedText
+                      style={[styles.articleTitle, { color: theme.textMain }]}
+                      numberOfLines={2}
+                    >
+                      {article.title}
+                    </ThemedText>
+                    <ThemedText
+                      style={[styles.articleExcerpt, { color: theme.textDim }]}
+                      numberOfLines={3}
+                    >
+                      {article.excerpt}
+                    </ThemedText>
+                    <View style={styles.articleFooter}>
+                      <Feather name="user" size={14} color={theme.textDim} />
+                      <ThemedText style={[styles.articleAuthor, { color: theme.textDim }]}>
+                        {article.author}
+                      </ThemedText>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </CollapsibleSection>
 
-              {/* Placeholder media area */}
-              <View
-                style={[
-                  styles.mediaPlaceholder,
-                  {
-                    borderColor: theme.borderColor,
-                  },
-                ]}
-              >
-                <ThemedText style={[styles.mediaText, { color: theme.textDim }]}>
-                  Post content
-                </ThemedText>
-              </View>
+        {/* Mixed Feed: Posts and Randomly Inserted "People You May Know" Sections */}
+        <View style={styles.postList}>
+          {mixedFeed.map((item) => {
+            if (item.type === 'post') {
+              const post = item.data as CommunityPost;
+              return (
+                <View
+                  key={item.id}
+                  style={[
+                    styles.postCard,
+                    {
+                      backgroundColor: theme.panelBg,
+                      borderColor: theme.borderColor,
+                    },
+                  ]}
+                >
+                  {/* Header row */}
+                  <View style={styles.postHeaderRow}>
+                    <View style={styles.avatarWrapper}>
+                      <Image source={{ uri: post.avatar }} style={styles.avatar} />
+                      <View style={styles.verifiedBadge}>
+                        <Feather name="shield" size={10} color="#fff" />
+                      </View>
+                      {post.rating && post.rating >= 3 && (
+                        <View style={styles.ratingBadge}>
+                          <Feather name="star" size={12} color={BrandColors.amber500} />
+                        </View>
+                      )}
+                    </View>
 
-              {/* Footer / actions */}
-              <View style={styles.footerRow}>
-                <View style={styles.metricsRow}>
-                  <View style={styles.metric}>
-                    <Feather name="heart" size={18} color={theme.textDim} />
-                    <ThemedText style={[styles.metricText, { color: theme.textDim }]}>
-                      {post.likes}
+                    <View style={styles.postMeta}>
+                      <View style={styles.nameHandleRow}>
+                        <ThemedText style={[styles.name, { color: theme.textMain }]}>
+                          {post.name}
+                        </ThemedText>
+                        <ThemedText style={[styles.handle, { color: theme.textDim }]}>
+                          {post.handle}
+                        </ThemedText>
+                      </View>
+                      <View style={styles.clanRow}>
+                        <View style={styles.clanTag}>
+                          <ThemedText style={styles.clanTagText}>{post.clan}</ThemedText>
+                        </View>
+                        <View
+                          style={[
+                            styles.clanTagMuted,
+                            {
+                              backgroundColor: isLightMode
+                                ? 'rgba(148, 163, 184, 0.3)'
+                                : 'rgba(148, 163, 184, 0.15)',
+                            },
+                          ]}
+                        >
+                          <ThemedText
+                            style={[
+                              styles.clanTagMutedText,
+                              { color: isLightMode ? '#475569' : '#e2e8f0' },
+                            ]}
+                          >
+                            {post.tribe}
+                          </ThemedText>
+                        </View>
+                      </View>
+                    </View>
+
+                    <ThemedText style={[styles.timeAgo, { color: theme.textDim }]}>
+                      {post.timeAgo}
                     </ThemedText>
                   </View>
-                  <View style={styles.metric}>
-                    <Feather name="message-circle" size={18} color={theme.textDim} />
-                    <ThemedText style={[styles.metricText, { color: theme.textDim }]}>
-                      {post.comments}
+
+                  {/* Content */}
+                  <ThemedText style={[styles.postContent, { color: theme.textMain }]}>
+                    {post.content}
+                  </ThemedText>
+
+                  {/* Placeholder media area */}
+                  <View
+                    style={[
+                      styles.mediaPlaceholder,
+                      {
+                        borderColor: theme.borderColor,
+                      },
+                    ]}
+                  >
+                    <ThemedText style={[styles.mediaText, { color: theme.textDim }]}>
+                      Post content
                     </ThemedText>
+                  </View>
+
+                  {/* Footer / actions */}
+                  <View style={styles.footerRow}>
+                    <View style={styles.metricsRow}>
+                      <View style={styles.metric}>
+                        <Feather name="heart" size={18} color={theme.textDim} />
+                        <ThemedText style={[styles.metricText, { color: theme.textDim }]}>
+                          {post.likes}
+                        </ThemedText>
+                      </View>
+                      <View style={styles.metric}>
+                        <Feather name="message-circle" size={18} color={theme.textDim} />
+                        <ThemedText style={[styles.metricText, { color: theme.textDim }]}>
+                          {post.comments}
+                        </ThemedText>
+                      </View>
+                    </View>
+
+                    <AnimatedButton
+                      onPress={() => handleConnectKin(post.id)}
+                      style={styles.connectKinButton}
+                    >
+                      <View style={styles.connectKinButtonInner}>
+                        <Feather name="user-plus" size={16} color="#fff" />
+                        <ThemedText style={styles.connectKinText}>CONNECT KIN</ThemedText>
+                      </View>
+                    </AnimatedButton>
                   </View>
                 </View>
-
-                <AnimatedButton
-                  onPress={() => handleConnectKin(post.id)}
-                  style={styles.connectKinButton}
-                >
-                  <View style={styles.connectKinButtonInner}>
-                    <Feather name="user-plus" size={16} color="#fff" />
-                    <ThemedText style={styles.connectKinText}>CONNECT KIN</ThemedText>
+              );
+            } else {
+              // "People You May Know" section
+              const suggestions = item.data as UserProfile[];
+              return (
+                <View key={item.id} style={styles.suggestionsSection}>
+                  <View style={styles.suggestionsHeaderRow}>
+                    <ThemedText style={[styles.suggestionsTitle, { color: theme.textMain }]}>
+                      People You May Know
+                    </ThemedText>
+                    <ThemedText style={[styles.suggestionsSubtitle, { color: theme.textDim }]}>
+                      Possible & Nearby Kin
+                    </ThemedText>
                   </View>
-                </AnimatedButton>
-              </View>
-            </View>
-          ))}
+                  {isLoadingUsers ? (
+                    <View style={styles.loadingContainer}>
+                      <LoadingSpinner size="small" color={BrandColors.orange500} />
+                      <ThemedText style={[styles.loadingText, { color: theme.textDim }]}>
+                        Loading suggestions...
+                      </ThemedText>
+                    </View>
+                  ) : suggestions.length === 0 ? (
+                    <View style={styles.emptyContainer}>
+                      <Feather name="users" size={32} color={theme.textDim} />
+                      <ThemedText style={[styles.emptyText, { color: theme.textDim }]}>
+                        No suggestions available
+                      </ThemedText>
+                    </View>
+                  ) : (
+                    <FlatList
+                      horizontal
+                      data={suggestions}
+                      keyExtractor={(user) => user.id}
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={styles.suggestionsList}
+                      renderItem={({ item: user }) => (
+                        <TouchableOpacity
+                          style={[
+                            styles.suggestionCard,
+                            { backgroundColor: theme.panelBg, borderColor: theme.borderColor },
+                          ]}
+                          onPress={() => handleProfileTap(user)}
+                          activeOpacity={0.9}
+                        >
+                          <View style={styles.suggestionAvatarWrapper}>
+                            {user.avatar ? (
+                              <Image source={{ uri: user.avatar }} style={styles.suggestionAvatar} />
+                            ) : (
+                              <View
+                                style={[
+                                  styles.suggestionAvatarPlaceholder,
+                                  { backgroundColor: theme.borderColor },
+                                ]}
+                              >
+                                <Feather name="user" size={24} color={theme.textDim} />
+                              </View>
+                            )}
+                            {user.rating && user.rating >= 3 && (
+                              <View style={styles.ratingBadge}>
+                                <Feather name="star" size={12} color={BrandColors.amber500} />
+                              </View>
+                            )}
+                          </View>
+                          <ThemedText
+                            style={[styles.suggestionName, { color: theme.textMain }]}
+                            numberOfLines={1}
+                          >
+                            {user.displayName}
+                          </ThemedText>
+                          {user.clan && (
+                            <ThemedText style={styles.suggestionClan} numberOfLines={1}>
+                              {user.clan}
+                            </ThemedText>
+                          )}
+                          <View style={styles.suggestionActions}>
+                            <AnimatedButton
+                              onPress={() => handleConnectSuggestion(user.id)}
+                              style={styles.suggestionConnectButton}
+                            >
+                              <View style={styles.suggestionConnectInner}>
+                                <Feather name="user-plus" size={14} color="#fff" />
+                                <ThemedText style={styles.suggestionConnectText}>CONNECT</ThemedText>
+                              </View>
+                            </AnimatedButton>
+                          </View>
+                        </TouchableOpacity>
+                      )}
+                    />
+                  )}
+                </View>
+              );
+            }
+          })}
         </View>
       </ScrollView>
     </ScreenContainer>
@@ -366,6 +702,25 @@ const styles = StyleSheet.create({
   suggestionsList: {
     gap: Spacing[3],
   },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing[6],
+    gap: Spacing[2],
+  },
+  loadingText: {
+    fontSize: Typography.fontSize.sm,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing[6],
+    gap: Spacing[2],
+  },
+  emptyText: {
+    fontSize: Typography.fontSize.sm,
+  },
   suggestionCard: {
     width: 200,
     padding: Spacing[4],
@@ -378,11 +733,39 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 },
   },
+  suggestionAvatarWrapper: {
+    position: 'relative',
+    marginBottom: Spacing[3],
+  },
   suggestionAvatar: {
     width: 72,
     height: 72,
     borderRadius: BorderRadius.xl,
-    marginBottom: Spacing[3],
+  },
+  suggestionAvatarPlaceholder: {
+    width: 72,
+    height: 72,
+    borderRadius: BorderRadius.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ratingBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: BrandColors.amber500,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
   suggestionName: {
     fontSize: 14,
@@ -451,7 +834,7 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: BorderRadius.xl,
-    overflow: 'hidden',
+    overflow: 'visible',
     marginRight: Spacing[3],
     position: 'relative',
   },
@@ -472,6 +855,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: '#000',
+    zIndex: 1,
   },
   postMeta: {
     flex: 1,
@@ -511,12 +895,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing[3],
     paddingVertical: 4,
     borderRadius: BorderRadius['2xl'],
-    backgroundColor: 'rgba(148, 163, 184, 0.15)',
   },
   clanTagMutedText: {
     fontSize: Typography.fontSize.xs,
     fontWeight: '900',
-    color: '#e2e8f0',
     letterSpacing: Typography.letterSpacing.widest,
   },
   timeAgo: {
@@ -580,6 +962,113 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: Typography.letterSpacing.widest,
     color: '#e2e8f0',
+  },
+  collapsibleHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: Spacing[3],
+    paddingHorizontal: Spacing[2],
+    marginTop: Spacing[4],
+  },
+  collapsibleHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[2],
+  },
+  collapsibleTitle: {
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: Typography.letterSpacing.widest,
+  },
+  emptyArticlesContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing[8],
+    paddingHorizontal: Spacing[4],
+    gap: Spacing[3],
+  },
+  emptyArticlesText: {
+    fontSize: Typography.fontSize.sm,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  articlesList: {
+    gap: Spacing[4],
+    marginTop: Spacing[2],
+  },
+  articleCard: {
+    borderRadius: BorderRadius['2xl'],
+    borderWidth: 1,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+  },
+  articleImage: {
+    width: '100%',
+    height: 180,
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+  },
+  articleContent: {
+    padding: Spacing[4],
+    gap: Spacing[2],
+  },
+  articleHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing[1],
+  },
+  articleTags: {
+    flexDirection: 'row',
+    gap: Spacing[2],
+  },
+  articleTag: {
+    paddingHorizontal: Spacing[2],
+    paddingVertical: 4,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: BrandColors.orange500,
+  },
+  articleTagClan: {
+    backgroundColor: 'rgba(249, 115, 22, 0.15)',
+  },
+  articleTagText: {
+    fontSize: Typography.fontSize.xs,
+    fontWeight: '900',
+    color: '#fff',
+    letterSpacing: Typography.letterSpacing.widest,
+  },
+  articleTagTextClan: {
+    fontSize: Typography.fontSize.xs,
+    fontWeight: '900',
+    color: BrandColors.orange500,
+    letterSpacing: Typography.letterSpacing.widest,
+  },
+  articleDate: {
+    fontSize: Typography.fontSize.xs,
+    fontWeight: '600',
+  },
+  articleTitle: {
+    fontSize: Typography.fontSize.lg,
+    fontWeight: '800',
+    lineHeight: 22,
+  },
+  articleExcerpt: {
+    fontSize: Typography.fontSize.sm,
+    lineHeight: 18,
+    marginTop: Spacing[1],
+  },
+  articleFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[1],
+    marginTop: Spacing[2],
+  },
+  articleAuthor: {
+    fontSize: Typography.fontSize.xs,
+    fontWeight: '600',
   },
 });
 
